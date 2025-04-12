@@ -22,6 +22,8 @@ dependencies = [
 
 [project.scripts]
 natvar = "natvar.__main__:main"
+query-genome = "natvar.__main__:query_genome"
+query-genome-batch = "natvar.__main__:query_genome_batch"
 
 [project.optional-dependencies]
 jax = [
