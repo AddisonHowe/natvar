@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "natvar"
+dynamic = ["version"]
+requires-python = ">= 3.8"
+readme = "README.md"
+description = "Natural variation of promoter sequences."
+authors = [
+  {name = "Addison Howe"},
+  {name = "Joe Landsittel"},
+]
+dependencies = [
+  "numpy>=2.2",
+  "scipy>=1.15",
+  "matplotlib>=3.10",
+  "pandas>=2.2",
+  "tqdm>=4.67",
+]
+
+[project.scripts]
+natvar = "natvar.__main__:main"
+
+[project.optional-dependencies]
+jax = [
+  "jax>=0.5",
+  "equinox>=0.11",
+]
+jupyter = [
+  "ipykernel",
+  "ipywidgets",
+]
+dev = [
+  "pytest>=8.3",
+]
