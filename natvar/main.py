@@ -11,6 +11,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
 def main(args):
+    print("Hello world!")
     print(f"Handled args: {args}")
     return
 
