@@ -76,6 +76,11 @@ def test_count_mutations(seqs, wt_seq, expected):
      [0, 1, 4],
      [0, 0, 1],
     ],
+    [[[0,1,2,3,0,1,2,3],[3,0,1,2,3,3,3,3],[3,3,3,3,0,1,2,2]], 
+     [0,1,2,3],
+     [0, 1, 4],  # Keeps first occurrence
+     [0, 0, 1],
+    ],
 ])
 def test_search_matrix_for_query(matrix, query, min_locs_exp, min_dists_exp):
     matrix = np.array(matrix, dtype=np.uint8)

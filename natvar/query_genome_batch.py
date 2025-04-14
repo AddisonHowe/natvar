@@ -155,13 +155,16 @@ def main(args):
             right_pad_start = loc + len(query)
             right_pad_stop = min(loc + len(query) + pad_right, len(c))
             left_pad_len = left_pad_stop - left_pad_start
+            print(pad_left, left_pad_start, left_pad_stop, left_pad_len, left_pad_arr)
             right_pad_len = right_pad_stop - right_pad_start
-            left_pad_arr[-left_pad_len:] = array_to_gene_seq(
-                c[left_pad_start:left_pad_stop], dtype=str
-            )
-            right_pad_arr[:right_pad_len] = array_to_gene_seq(
-                c[right_pad_start:right_pad_stop], dtype=str
-            )
+            if left_pad_len > 0:
+                left_pad_arr[-left_pad_len:] = array_to_gene_seq(
+                    c[left_pad_start:left_pad_stop], dtype=str
+                )
+            if right_pad_len > 0:
+                right_pad_arr[:right_pad_len] = array_to_gene_seq(
+                    c[right_pad_start:right_pad_stop], dtype=str
+                )
             left_pad_string = "".join(left_pad_arr)
             right_pad_string = "".join(right_pad_arr)
             contig_segments.append(
@@ -179,7 +182,7 @@ def main(args):
             genome_fpath=genome_fpath,
             query_string=query_string,
             min_dist=nearest_match_dist,
-            nearest_idxs=nearest_match_idxs,
+            nearest_idxs=nearest_match_idxs.tolist(),
             location_on_contigs=location_on_contigs,
             contig_segments=contig_segments,
             time_elapsed=(time1 - time0),

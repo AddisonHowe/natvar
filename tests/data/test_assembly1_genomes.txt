@@ -1,0 +1,2 @@
+tests/data/assembly_set1/genome1.contigs.fa
+tests/data/assembly_set1/genome2.contigs.fa.gz

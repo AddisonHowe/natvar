@@ -102,15 +102,35 @@ def main(args):
         printv("Found near match (d={}) at contig index {}".format(
             nearest_match_dist, idx
         ), verb, 1)
-
+    
     contig_segments = []
     location_on_contigs = []
     for c, loc in zip(contigs[nearest_match_idxs], min_locs[nearest_match_idxs]):
-        start = max(loc - pad_left, 0)
-        stop = min(loc + len(query) + pad_right, len(c))
-        result_string = array_to_gene_seq(c[start:stop])
-        contig_segments.append(b"".join(result_string).decode())
-        location_on_contigs.append(loc)
+        result = array_to_gene_seq(c[loc:loc + len(query)])
+        left_pad_arr = np.array(["_"] * pad_left)
+        right_pad_arr = np.array(["_"] * pad_right)
+        left_pad_start = max(loc - pad_left, 0)
+        left_pad_stop = loc
+        right_pad_start = loc + len(query)
+        right_pad_stop = min(loc + len(query) + pad_right, len(c))
+        left_pad_len = left_pad_stop - left_pad_start
+        right_pad_len = right_pad_stop - right_pad_start
+        if left_pad_len > 0:
+            left_pad_arr[-left_pad_len:] = array_to_gene_seq(
+                c[left_pad_start:left_pad_stop], dtype=str
+            )
+        if right_pad_len > 0:
+            right_pad_arr[:right_pad_len] = array_to_gene_seq(
+                c[right_pad_start:right_pad_stop], dtype=str
+            )
+        left_pad_string = "".join(left_pad_arr)
+        right_pad_string = "".join(right_pad_arr)
+        contig_segments.append(
+            left_pad_string.lower() \
+                + b"".join(result).decode() \
+                + right_pad_string .lower()
+        )
+        location_on_contigs.append(loc.item())
         
     write_results(
         f"{outdir}/{outfname}",

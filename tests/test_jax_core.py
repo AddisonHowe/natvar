@@ -52,9 +52,14 @@ def test_int_to_binary_arr(int_array, n, expected):
      [0, 1, 4],
      [0, 0, 1],
     ],
+    [[[0,1,2,3,0,1,2,3],[3,0,1,2,3,3,3,3],[3,3,3,3,0,1,2,2]], 
+     [0,1,2,3],
+     [0, 1, 4],  # Keeps first occurrence
+     [0, 0, 1],
+    ],
 ])
-@pytest.mark.parametrize("batch_size", [2])
-@pytest.mark.parametrize("pad_val", [4])
+@pytest.mark.parametrize("batch_size", [2, 4, 8])
+@pytest.mark.parametrize("pad_val", [4, 5])
 def test_search_matrix_for_query(
     matrix, query, min_locs_exp, min_dists_exp,
     batch_size, pad_val
