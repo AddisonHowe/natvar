@@ -93,21 +93,25 @@ def test_query_genome(
     res = read_output(f"{args.outdir}/{outfname}")
 
     errors = []
-    if not np.allclose(eval(res['min_distance']), exp_dists):
-        msg = "Wrong expected min_distance. "
-        msg += f"Expected {exp_dists}. Got {res['min_distance']}"
+    KEY_MIN_DISTANCE = "min_distance"
+    KEY_NEAREST_IDXS = "nearest_idxs"
+    KEY_LOC_ON_CONTIGS = "location_on_contigs"
+    KEY_CONTIG_SEGMENTS = "contig_segments"
+    if not np.allclose(eval(res[KEY_MIN_DISTANCE]), exp_dists):
+        msg = f"Wrong expected {KEY_MIN_DISTANCE}. "
+        msg += f"Expected {exp_dists}. Got {res[KEY_MIN_DISTANCE]}"
         errors.append(msg)
-    if not np.allclose(eval(res['nearest_idxs']), exp_idxs):
-        msg = "Wrong expected nearest_idxs. "
-        msg += f"Expected {exp_idxs}. Got {res['nearest_idxs']}"
+    if not np.allclose(eval(res[KEY_NEAREST_IDXS]), exp_idxs):
+        msg = f"Wrong expected {KEY_NEAREST_IDXS}. "
+        msg += f"Expected {exp_idxs}. Got {res[KEY_NEAREST_IDXS]}"
         errors.append(msg)
-    if not np.allclose(eval(res['location_on_contigs']), exp_locs):
-        msg = "Wrong expected location_on_contigs. "
-        msg += f"Expected {exp_locs}. Got {res['location_on_contigs']}"
+    if not np.allclose(eval(res[KEY_LOC_ON_CONTIGS]), exp_locs):
+        msg = f"Wrong expected {KEY_LOC_ON_CONTIGS}. "
+        msg += f"Expected {exp_locs}. Got {res[KEY_LOC_ON_CONTIGS]}"
         errors.append(msg)
-    if not np.all(eval(res['contig_segments']) == exp_seqs):
-        msg = "Wrong expected contig_segments. "
-        msg += f"Expected {exp_seqs}. Got {res['contig_segments']}"
+    if not np.all(eval(res[KEY_CONTIG_SEGMENTS]) == exp_seqs):
+        msg = f"Wrong expected {KEY_CONTIG_SEGMENTS}. "
+        msg += f"Expected {exp_seqs}. Got {res[KEY_CONTIG_SEGMENTS]}"
         errors.append(msg)
 
     remove_dir(args.outdir)

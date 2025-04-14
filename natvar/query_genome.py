@@ -10,12 +10,13 @@ Inputs:
     --verbosity : verbosity level.
 
 Outputs:
-    Writes results to an output file
+    Writes results to an output file.
 """
 
 import argparse
 import sys
 import os
+import time
 import numpy as np
 import warnings
 
@@ -36,11 +37,6 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def printv(s, verbosity, importance=1, **kwargs):
-    if verbosity >= importance:
-        print(s, **kwargs)
-
-
 def write_results(
         out_fpath, *, 
         genome_fpath, 
@@ -49,14 +45,16 @@ def write_results(
         nearest_idxs,
         contig_segments,
         location_on_contigs,
+        time_elapsed,
 ):
     with open(out_fpath, 'w') as f:
         f.write(f"genome_fpath\t{genome_fpath}\n")
-        f.write(f"query\t{query_string}\n")
+        f.write(f"query_string\t{query_string}\n")
         f.write(f"min_distance\t{min_dist}\n")
         f.write(f"nearest_idxs\t{nearest_idxs}\n")
         f.write(f"location_on_contigs\t{location_on_contigs}\n")
         f.write(f"contig_segments\t{contig_segments}\n")
+        f.write(f"time_elapsed\t{time_elapsed}\n")
 
 
 def main(args):
@@ -66,33 +64,39 @@ def main(args):
     outfname = args.outfname
     pad_left = args.pad_left
     pad_right = args.pad_right
-    verb = args.verbosity
+    verbosity = args.verbosity
+
+    def printv(s, importance=1, **kwargs):
+        if verbosity >= importance:
+            print(s, **kwargs)
 
     os.makedirs(outdir, exist_ok=True)
 
-    printv(f"Searching genome file: {genome_fpath}", verb)
-    printv(f"Query (length {len(query_string)}): {query_string}", verb)
+    printv(f"Searching genome file: {genome_fpath}")
+    printv(f"Query (length {len(query_string)}): {query_string}")
+
+    time0 = time.time()
     
     # Load contigs into a matrix from the contig file.
-    printv("Loading genome file...", verb)
+    printv("Loading genome file...")
     contigs_list = process_contig_file(genome_fpath)
     contig_lengths = [len(c) for c in contigs_list]
     contigs = get_contigs_matrix(contigs_list, pad_val=4)
-    printv(f"Loaded {len(contigs_list)} contigs.", verb, 1)
-    printv(f"Max length contig: {np.max(contig_lengths)}", verb, 2)
-    printv(f"Shape of loaded contigs matrix: {contigs.shape}", verb, 2)
+    printv(f"Loaded {len(contigs_list)} contigs.")
+    printv(f"Max length contig: {np.max(contig_lengths)}", 2)
+    printv(f"Shape of loaded contigs matrix: {contigs.shape}", 2)
 
     query = gene_seq_to_array(query_string)
-    printv("Searching for query...", verb)
+    printv("Searching for query...")
     min_locs, min_dists = search_matrix_for_query(contigs, query)
-    printv("Locations of nearest match:", verb, 2)
-    printv(min_locs, verb, 2)
-    printv("Distances to nearest match:", verb, 2)
-    printv(min_dists, verb, 2)
-
     nearest_match_dist = np.min(min_dists)
     nearest_match_idxs = np.where(min_dists == nearest_match_dist)[0]
-    printv(f"Nearest match distance: {nearest_match_dist}", verb, 1)
+
+    printv("Locations of nearest match:", 2)
+    printv(min_locs, 2)
+    printv("Distances to nearest match:", 2)
+    printv(min_dists, 2)
+    printv(f"Nearest match distance: {nearest_match_dist}")
     if len(nearest_match_idxs) > 1:
         msg = "Found {} contigs with a near match (d={})".format(
             len(nearest_match_idxs), nearest_match_dist)
@@ -101,7 +105,7 @@ def main(args):
     for idx in nearest_match_idxs:
         printv("Found near match (d={}) at contig index {}".format(
             nearest_match_dist, idx
-        ), verb, 1)
+        ))
     
     contig_segments = []
     location_on_contigs = []
@@ -131,7 +135,10 @@ def main(args):
                 + right_pad_string .lower()
         )
         location_on_contigs.append(loc.item())
-        
+    
+    time1 = time.time()
+    time_elapsed = time1 - time0
+    
     write_results(
         f"{outdir}/{outfname}",
         genome_fpath=genome_fpath,
@@ -140,6 +147,7 @@ def main(args):
         nearest_idxs=nearest_match_idxs,
         contig_segments=contig_segments,
         location_on_contigs=location_on_contigs,
+        time_elapsed=time_elapsed,
     )
 
 

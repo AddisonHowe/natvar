@@ -93,22 +93,26 @@ def test_query_genome_batch(
     print(res)
 
     errors = []
+    KEY_MIN_DISTANCE = "min_distance"
+    KEY_NEAREST_IDXS = "nearest_idxs"
+    KEY_LOC_ON_CONTIGS = "location_on_contigs"
+    KEY_CONTIG_SEGMENTS = "contig_segments"
     for i in range(nrows):
-        if not np.allclose(eval(res['min_dist'][i]), exp_dists[i]):
-            msg = f"Wrong expected min_dist (row {i+1}). "
-            msg += f"Expected {exp_dists[i]}. Got {res['min_dist'][i]}"
+        if not np.allclose(eval(res[KEY_MIN_DISTANCE][i]), exp_dists[i]):
+            msg = f"Wrong expected {KEY_MIN_DISTANCE} (row {i+1}). "
+            msg += f"Expected {exp_dists[i]}. Got {res[KEY_MIN_DISTANCE][i]}"
             errors.append(msg)
-        if not np.allclose(eval(res['nearest_idxs'][i]), exp_idxs[i]):
-            msg = f"Wrong expected nearest_idxs (row {i+1}). "
-            msg += f"Expected {exp_idxs[i]}. Got {res['nearest_idxs'][i]}"
+        if not np.allclose(eval(res[KEY_NEAREST_IDXS][i]), exp_idxs[i]):
+            msg = f"Wrong expected {KEY_NEAREST_IDXS} (row {i+1}). "
+            msg += f"Expected {exp_idxs[i]}. Got {res[KEY_NEAREST_IDXS][i]}"
             errors.append(msg)
-        if not np.allclose(eval(res['location_on_contigs'][i]), exp_locs[i]):
-            msg = f"Wrong expected location_on_contigs (row {i+1}). "
-            msg += f"Expected {exp_locs[i]}. Got {res['location_on_contigs'][i]}"
+        if not np.allclose(eval(res[KEY_LOC_ON_CONTIGS][i]), exp_locs[i]):
+            msg = f"Wrong expected {KEY_LOC_ON_CONTIGS} (row {i+1}). "
+            msg += f"Expected {exp_locs[i]}. Got {res[KEY_LOC_ON_CONTIGS][i]}"
             errors.append(msg)
-        if not np.all(eval(res['contig_segments'][i]) == exp_seqs[i]):
-            msg = f"Wrong expected contig_segments (row {i+1}). "
-            msg += f"Expected {exp_seqs[i]}. Got {res['contig_segments'][i]}"
+        if not np.all(eval(res[KEY_CONTIG_SEGMENTS][i]) == exp_seqs[i]):
+            msg = f"Wrong expected {KEY_CONTIG_SEGMENTS} (row {i+1}). "
+            msg += f"Expected {exp_seqs[i]}. Got {res[KEY_CONTIG_SEGMENTS][i]}"
             errors.append(msg)
 
     remove_dir(args.outdir)

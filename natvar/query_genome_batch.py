@@ -2,7 +2,7 @@
 
 Inputs:
     --query : query string.
-    --genome_fpath : genome file of contigs in fasta.gz format.
+    --input_fpath : genome file of contigs in fasta.gz format.
     --outdir : directory to store output.
     --outfname : output filename.
     --batch_size : number of windows to process at once. Default 1000.
@@ -11,7 +11,7 @@ Inputs:
     --verbosity : verbosity level.
 
 Outputs:
-    Writes results to an output file
+    Writes results to an output file.
 """
 
 import argparse
@@ -96,7 +96,7 @@ def main(args):
     column_names = [
         "genome_fpath",
         "query_string",
-        "min_dist",
+        "min_distance",
         "nearest_idxs",
         "location_on_contigs",
         "contig_segments",
