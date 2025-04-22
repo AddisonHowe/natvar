@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #=============================================================================
 #
 # FILE: read_genome_sizes.sh
@@ -18,6 +18,6 @@ fi
 
 filelist=$1
 
-read-genome-sizes -i $filelist -o out/genome_sizes -v 1
+read-genome-sizes -i $filelist -o out/genome_sizes -v 1 --pbar
 
 

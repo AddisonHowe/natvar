@@ -24,6 +24,7 @@ def parse_args(args):
     parser.add_argument('-i', '--genome_filelist', type=str, required=True)
     parser.add_argument('-o', '--outdir', type=str, required=True)
     parser.add_argument('-v', '--verbosity', type=int, default=1)
+    parser.add_argument('--pbar', action="store_true")
     return parser.parse_args(args)
 
 
@@ -31,6 +32,7 @@ def main(args):
     genome_filelist = args.genome_filelist
     outdir = args.outdir
     verbosity = args.verbosity
+    pbar = args.pbar
 
     def printv(s, importance=1, **kwargs):
         if verbosity >= importance:
@@ -40,12 +42,12 @@ def main(args):
 
     
     # Load contigs into a matrix from the contig file.
-    printv("Reading input file...")
-    time0 = time.time()
     with open(genome_filelist, 'r') as f:
         filelist = f.readlines()
         filelist = [s.strip() for s in filelist]
-    genome_lengths, contig_lengths = read_genome_sizes(filelist)
+    printv("Reading genome sizes...")
+    time0 = time.time()
+    genome_lengths, contig_lengths = read_genome_sizes(filelist, pbar=pbar)
     time1 = time.time()
     printv(f"Finished in {time1-time0:.4f} seconds.")
 

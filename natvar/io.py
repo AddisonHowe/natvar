@@ -6,6 +6,7 @@ import numpy as np
 import gzip
 import re as regex
 import warnings
+import tqdm as tqdm
 
 from .helpers import gene_seq_to_array
 
@@ -96,7 +97,7 @@ def load_genome_set(genome_filelist, pad_val):
     genome_array = np.zeros([nrows, ncols], dtype=np.uint8)
 
 
-def read_genome_sizes(genome_filelist):
+def read_genome_sizes(genome_filelist, pbar=False):
     """For each genome, determine the number of contigs and the length of each.
     
     Args:
@@ -109,7 +110,7 @@ def read_genome_sizes(genome_filelist):
     """
     num_contigs = []
     contig_lengths = []
-    for fpath in genome_filelist:
+    for fpath in tqdm.tqdm(genome_filelist, disable=not pbar):
         contigs = process_contig_file(fpath)
         n = len(contigs)  # number of contigs
         lengths = np.array([len(c) for c in contigs])  # length of each contig
