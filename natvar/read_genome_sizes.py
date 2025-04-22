@@ -50,8 +50,9 @@ def main(args):
     printv(f"Finished in {time1-time0:.4f} seconds.")
 
     os.makedirs(outdir, exist_ok=True)
+    contig_lengths = np.array(contig_lengths, dtype=object)
     np.save(f"{outdir}/genome_lengths.npy", genome_lengths)
-    np.save(f"{outdir}/contig_lengths.npy", contig_lengths, allow_pickle=True)
+    np.save(f"{outdir}/contig_lengths.npy", contig_lengths)
     
 
 #######################

@@ -1,0 +1,11 @@
+>genome3.contig1 len=8
+AAAA
+CCCC
+>genome3.contig2 len=8
+GGGGTTTT
+>genome3.contig3 len=8
+ACGTAC
+G
+T
+>genome3.contig4 len=4
+ACGT

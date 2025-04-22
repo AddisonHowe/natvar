@@ -103,8 +103,8 @@ def read_genome_sizes(genome_filelist):
         genome_filelist (list[str]): paths to each genome file to process.
     
     Returns:
-        num_contigs (list[int]): number of contigs making up each genome. 
-        contig_lengths (list[np.array[int]]): list of arrays giving contig 
+        num_contigs (np.ndarray[int]): number of contigs making up each genome.
+        contig_lengths (list[np.ndarray[int]]): list of arrays giving contig 
             lengths for each genome.
     """
     num_contigs = []
@@ -115,4 +115,5 @@ def read_genome_sizes(genome_filelist):
         lengths = np.array([len(c) for c in contigs])  # length of each contig
         num_contigs.append(n)
         contig_lengths.append(lengths)
+    num_contigs = np.array(num_contigs, dtype=int)
     return num_contigs, contig_lengths
