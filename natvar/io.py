@@ -41,7 +41,6 @@ def process_contig_file(fpath):
         else:
             msg = "No reported length for contig."
             warnings.warn(msg)
-
     
     with smart_open(fpath, mode='rt') as f:
         contig_list = []
@@ -78,3 +77,42 @@ def get_contigs_matrix(contigs_list, pad_val=5):
     for i in range(len(contigs_list)):
         contigs[i, 0:lengths[i]] = contigs_list[i]
     return contigs
+
+
+def load_genome_set(genome_filelist, pad_val):
+    """Process a number of genome files into a matrix format."""
+    contig_matrices = []
+    genome_sizes = []
+    nrows = 0
+    ncols = 0
+    for fpath in genome_filelist:
+        m = get_contigs_matrix(fpath)
+        r, c = m.shape
+        contig_matrices.append(m)
+        genome_sizes.append(r)
+        nrows += r
+        ncols = max(ncols, c)
+    genome_sizes = np.array(genome_sizes)
+    genome_array = np.zeros([nrows, ncols], dtype=np.uint8)
+
+
+def read_genome_sizes(genome_filelist):
+    """For each genome, determine the number of contigs and the length of each.
+    
+    Args:
+        genome_filelist (list[str]): paths to each genome file to process.
+    
+    Returns:
+        num_contigs (list[int]): number of contigs making up each genome. 
+        contig_lengths (list[np.array[int]]): list of arrays giving contig 
+            lengths for each genome.
+    """
+    num_contigs = []
+    contig_lengths = []
+    for fpath in genome_filelist:
+        contigs = process_contig_file(fpath)
+        n = len(contigs)  # number of contigs
+        lengths = np.array([len(c) for c in contigs])  # length of each contig
+        num_contigs.append(n)
+        contig_lengths.append(lengths)
+    return num_contigs, contig_lengths
