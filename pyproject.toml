@@ -24,6 +24,7 @@ dependencies = [
 natvar = "natvar.__main__:main"
 query-genome = "natvar.__main__:query_genome"
 query-genome-batch = "natvar.__main__:query_genome_batch"
+read-genome-sizes = "natvar.__main__:read_genome_sizes"
 
 [project.optional-dependencies]
 jax = [

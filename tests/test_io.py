@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 
 from .conftest import DATDIR
-from natvar.io import process_contig_file 
+from natvar.io import process_contig_file, read_genome_sizes
 from natvar.helpers import gene_seq_to_array
 
 @pytest.mark.parametrize("fpath, seqs_exp", [
@@ -46,4 +46,24 @@ class TestProcessContigFile:
                 errors.append(msg)
         assert not errors, "Errors occurred:\n{}".format("\n".join(errors))
 
+
+@pytest.mark.parametrize("file_list, ncontigs_exp, lengths_exp", [
+    [[f"{DATDIR}/assembly_set1/genome1.contigs.fa"], 
+     [3], [np.array([8, 8, 8])]],
+    [[f"{DATDIR}/assembly_set1/genome2.contigs.fa.gz"], 
+     [3], [np.array([2, 8, 4])]],
+    [[f"{DATDIR}/assembly_set1/genome1.contigs.fa",
+      f"{DATDIR}/assembly_set1/genome2.contigs.fa.gz"], 
+     [3, 3], [np.array([8, 8, 8]), np.array([2, 8, 4])]],
+])
+def test_read_genome_sizes(file_list, ncontigs_exp, lengths_exp):
+    num_contigs, contig_lengths = read_genome_sizes(file_list)
+    errors = []
+    if not np.allclose(num_contigs, ncontigs_exp):
+        msg = f"Incorrect number. Got {num_contigs}. Expected {ncontigs_exp}."
+        errors.append(msg)
+    if not np.allclose(contig_lengths, lengths_exp):
+        msg = f"Incorrect lengths. Got {contig_lengths}. Expected {lengths_exp}."
+        errors.append(msg)
+    assert not errors, "Errors occurred:\n{}".format("\n".join(errors))
 
