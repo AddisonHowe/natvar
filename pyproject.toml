@@ -39,3 +39,6 @@ jupyter = [
 dev = [
   "pytest>=8.3",
 ]
+cuda = [
+  "jax[cuda12]",
+]
