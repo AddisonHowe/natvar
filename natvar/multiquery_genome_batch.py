@@ -173,7 +173,7 @@ def main(args):
         printv(f"  Processing genome file {genome_idx+1}/{ngenomes}", V2)
         contigs_list = process_contig_file(genome_fpath)
         contigs = get_contigs_matrix(contigs_list, pad_val=PAD_VAL)
-        printv(f"  Loaded {len(contigs_list)} contigs.", 3)
+        printv(f"\tLoaded {len(contigs_list)} contigs.", V3)
         printv(f"\tContigs matrix shape: {contigs.shape}.", V4)
         
         # Add padding if contigs are shorter than the query.
