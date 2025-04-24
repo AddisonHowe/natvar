@@ -1,2 +1,3 @@
 tests/data/assembly_set2/genome1.contigs.fa
 tests/data/assembly_set2/genome2.contigs.fa.gz
+tests/data/assembly_set2/genome3.contigs.fa

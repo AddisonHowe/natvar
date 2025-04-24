@@ -8,6 +8,8 @@ Inputs:
     --pad_left : number of bases to include before query match.
     --pad_right : number of bases to include after query match.
     --verbosity : verbosity level.
+    --jax : use jax acceleration.
+    --batch_size : number of windows to process at once, if using JAX.
 
 Outputs:
     Writes results to an output file.
@@ -22,7 +24,9 @@ import warnings
 
 from .helpers import array_to_gene_seq, gene_seq_to_array
 from .io import process_contig_file, get_contigs_matrix
-from .core import *
+from .core import search_matrix_for_query
+# from .jax.core import search_matrix_for_query as jax_search_matrix
+from .jax.core import static_search_matrix_batched as jax_search_matrix
 
 
 def parse_args(args):
@@ -34,6 +38,8 @@ def parse_args(args):
     parser.add_argument('-pl', '--pad_left', type=int, default=0)
     parser.add_argument('-pr', '--pad_right', type=int, default=0)
     parser.add_argument('-v', '--verbosity', type=int, default=1)
+    parser.add_argument('--jax', action="store_true")
+    parser.add_argument('--batch_size', type=int, default=800)
     return parser.parse_args(args)
 
 
@@ -65,6 +71,8 @@ def main(args):
     pad_left = args.pad_left
     pad_right = args.pad_right
     verbosity = args.verbosity
+    use_jax = args.jax
+    batch_size = args.batch_size
 
     def printv(s, importance=1, **kwargs):
         if verbosity >= importance:
@@ -86,9 +94,22 @@ def main(args):
     printv(f"Max length contig: {np.max(contig_lengths)}", 2)
     printv(f"Shape of loaded contigs matrix: {contigs.shape}", 2)
 
+    # Define the search function, with or without JAX acceleration
+    if use_jax:
+        def search_func(contigs, query):
+            return jax_search_matrix(
+                contigs, query,
+                array_length=contigs.shape[1],
+                query_length=len(query),
+                batch_size=min(batch_size, contigs.shape[1]),
+            )
+    else:
+        def search_func(contigs, query):
+            return search_matrix_for_query(contigs, query)
+    
     query = gene_seq_to_array(query_string)
     printv("Searching for query...")
-    min_locs, min_dists = search_matrix_for_query(contigs, query)
+    min_locs, min_dists = search_func(contigs, query)
     nearest_match_dist = np.min(min_dists)
     nearest_match_idxs = np.where(min_dists == nearest_match_dist)[0]
 

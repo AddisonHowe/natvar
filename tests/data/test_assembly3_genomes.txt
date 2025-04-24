@@ -1,0 +1,5 @@
+tests/data/assembly_set3/genome1.contigs.fa
+tests/data/assembly_set3/genome2.contigs.fa
+tests/data/assembly_set3/genome3.contigs.fa
+tests/data/assembly_set3/genome4.contigs.fa
+tests/data/assembly_set3/genome5.contigs.fa
