@@ -5,7 +5,7 @@
 import pytest
 import numpy as np
 
-from natvar.helpers import binary_arr_to_int, int_to_binary_arr
+from natvar.helpers import binary_arr_to_int, int_to_binary_arr, pad_matrix_for_batch_size
 from natvar.core import compare_sequences, count_mutations
 from natvar.core import search_matrix_for_query
 
@@ -96,4 +96,16 @@ def test_search_matrix_for_query(matrix, query, min_locs_exp, min_dists_exp):
         msg += f"Expected:\n{min_dists_exp}\nGot:\n{min_dists}"
         errors.append(msg)
     assert not errors, "Errors occurred:\n{}".format("\n".join(errors))
+    
+
+@pytest.mark.parametrize("m, axis, batch_size, exp_shape", [
+    [np.ones([3, 5]), 0, 2, (4, 5)],
+    [np.ones([3, 5]), 1, 2, (3, 6)],
+])
+@pytest.mark.parametrize("pad_val", [4])
+def test_pad_matrix_for_batch_size(m, axis, batch_size, exp_shape, pad_val):
+    m = pad_matrix_for_batch_size(
+        m, batch_size, pad_val, axis,
+    )
+    assert m.shape == exp_shape, f"Bad shape. Got {m.shape}. Expected {exp_shape}."
     

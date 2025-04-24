@@ -2,13 +2,14 @@
 
 Inputs:
     --query : query string.
-    --input_fpath : genome file of contigs in fasta.gz format.
+    --input_fpath : text file of paths to genomes in fasta format (contigs).
     --outdir : directory to store output.
     --outfname : output filename.
     --batch_size : number of windows to process at once. Default 1000.
     --pad_left : number of bases to include before query match.
     --pad_right : number of bases to include after query match.
     --verbosity : verbosity level.
+    --jax : use JAX acceleration.
 
 Outputs:
     Writes results to an output file.
@@ -23,7 +24,8 @@ import warnings
 
 from .helpers import array_to_gene_seq, gene_seq_to_array
 from .io import process_contig_file, get_contigs_matrix
-from .jax.core import search_matrix_for_query
+from .core import search_matrix_for_query
+from .jax.core import search_matrix_for_query as jax_search_matrix
 
 GEN_NT_VAL = 4
 PAD_VAL = 5
@@ -39,6 +41,7 @@ def parse_args(args):
     parser.add_argument('-pl', '--pad_left', type=int, default=0)
     parser.add_argument('-pr', '--pad_right', type=int, default=0)
     parser.add_argument('-v', '--verbosity', type=int, default=1)
+    parser.add_argument('--jax', action="store_true")
     return parser.parse_args(args)
 
 
@@ -75,6 +78,7 @@ def main(args):
     pad_left = args.pad_left
     pad_right = args.pad_right
     verbosity = args.verbosity
+    use_jax = args.jax
     
     def printv(s, importance=1, **kwargs):
         if verbosity >= importance:
@@ -105,6 +109,20 @@ def main(args):
     with open(outfpath, 'w') as f:
         f.write("\t".join(column_names) + "\n")
 
+    # Define the search function, with or without JAX acceleration
+    if use_jax:
+        def search_func(contigs, query):
+            return jax_search_matrix(
+                contigs, query,
+                batch_size=batch_size, 
+                pad_val=PAD_VAL,
+            )
+    else:
+        def search_func(contigs, query):
+            return search_matrix_for_query(
+                contigs, query,
+            )
+    
     for genome_fpath in genome_filepaths:
         time0 = time.time()
         
@@ -118,10 +136,8 @@ def main(args):
         # Perform search
         printv("Searching for query...", 1, flush=True)
         t0 = time.time()
-        min_locs, min_dists = search_matrix_for_query(
+        min_locs, min_dists = search_func(
             contigs, query, 
-            batch_size=batch_size, 
-            pad_val=PAD_VAL
         )
         t1 = time.time()
         

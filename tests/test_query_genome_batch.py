@@ -60,10 +60,11 @@ from .conftest import DATDIR, TMPDIR, remove_dir
     ],
 
 ])
-@pytest.mark.parametrize("batch_size", [1])
+@pytest.mark.parametrize("batch_size", [1, 2, 4, 8])
+@pytest.mark.parametrize("use_jax", [False, True])
 def test_query_genome_batch(
         infile, outdir, query, pad_left, pad_right, 
-        exp_dists, exp_idxs, exp_locs, exp_seqs, batch_size,
+        exp_dists, exp_idxs, exp_locs, exp_seqs, batch_size, use_jax,
 ):
     from natvar.query_genome_batch import parse_args, main
     
@@ -71,6 +72,8 @@ def test_query_genome_batch(
     argstring = f"-q {query} -i {DATDIR}/{infile} -o {outdir} " \
                 + f"-f {outfname} -pl {pad_left} -pr {pad_right} " \
                 + f"--batch_size {batch_size} -v 0"
+    if use_jax:
+        argstring += " --jax"
     
     arglist = argstring.split(" ")
     args = parse_args(arglist)

@@ -40,3 +40,18 @@ def int_to_binary_arr(int_array, n=None):
     return (
         (int_array[...,None] >> np.arange(n - 1, -1, -1)) & 1
     ).astype(np.uint8)
+
+
+def pad_matrix(matrix, p, pad_val, axis):
+    shape = list(matrix.shape)
+    shape[axis] = p
+    padding = pad_val * np.ones(shape, dtype=matrix.dtype)
+    return np.concatenate([matrix, padding], axis=axis)
+
+
+def pad_matrix_for_batch_size(matrix, batch_size, pad_val, axis):
+    n = matrix.shape[axis]
+    r = n % batch_size
+    if r > 0:
+        matrix = pad_matrix(matrix, batch_size - r, pad_val, axis)
+    return matrix

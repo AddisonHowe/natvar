@@ -65,15 +65,18 @@ from .conftest import DATDIR, TMPDIR, remove_dir
         0, [1], [2], ['_aaAACCcc_']
     ]
 ])
+@pytest.mark.parametrize("use_jax", [False, True])
 def test_query_genome(
         infile, outdir, query, pad_left, pad_right, 
-        exp_dists, exp_idxs, exp_locs, exp_seqs,
+        exp_dists, exp_idxs, exp_locs, exp_seqs, use_jax
 ):
     from natvar.query_genome import parse_args, main
     
     outfname = "q_results.tsv"
     argstring = f"-q {query} -i {DATDIR}/{infile} -o {outdir} " \
                 + f"-f {outfname} -pl {pad_left} -pr {pad_right} -v 0"
+    if use_jax:
+        argstring += " --jax"
     
     arglist = argstring.split(" ")
     args = parse_args(arglist)

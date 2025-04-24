@@ -5,6 +5,7 @@ jobs/
 tests/_tmp/
 .github/CODEOWNERS
 delme.*
+data/assemblies/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
