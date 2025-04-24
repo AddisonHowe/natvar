@@ -8,10 +8,21 @@ Inputs:
     --batch_size : number of windows to process at once. Default 1000.
     --pad_left : number of bases to include before query match.
     --pad_right : number of bases to include after query match.
+    --nrows0 : number of rows with which to initialize the storage matrix. 
+               Can be used to reduce number of recompilations. Default 0.
     --verbosity : verbosity level.
 
 Outputs:
     Writes results to an output file.
+
+Verbosity levels:
+    0: No output besides warnings.
+    1: Minimal output with no loop prints.
+    2: Minimal output with minimal loop prints.  <-- Default
+    3: Additional loop prints.
+    4: TBD
+    5: Debugging statements.
+
 """
 
 import argparse
@@ -34,6 +45,9 @@ from .jax.core import static_multisearch_matrix_batched
 GEN_NT_VAL = 4
 PAD_VAL = 5
 
+V1, V2, V3, V4 = 1, 2, 3, 4
+VDEBUG = 5  # verbosity level for debug prints
+
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
@@ -44,7 +58,8 @@ def parse_args(args):
     parser.add_argument('-b', '--batch_size', type=int, default=1000)
     parser.add_argument('-pl', '--pad_left', type=int, default=0)
     parser.add_argument('-pr', '--pad_right', type=int, default=0)
-    parser.add_argument('-v', '--verbosity', type=int, default=1)
+    parser.add_argument('--nrows0', type=int, default=0)
+    parser.add_argument('-v', '--verbosity', type=int, default=2)
     parser.add_argument('--jax_debug_max_traces', type=int, default=0)
 
     return parser.parse_args(args)
@@ -97,6 +112,7 @@ def main(args):
     batch_size = args.batch_size
     pad_left = args.pad_left
     pad_right = args.pad_right
+    nrows0 = args.nrows0
     verbosity = args.verbosity
     max_traces = args.jax_debug_max_traces
     
@@ -106,14 +122,15 @@ def main(args):
 
     os.makedirs(outdir, exist_ok=True)
 
-    printv(f"Searching genome files listed in: {input_fpath}", 1)
-    printv(f"Queries file: {queries_fpath}", 1)
+    printv(f"Searching genome files listed in: {input_fpath}", V1)
+    printv(f"Queries file: {queries_fpath}", V1)
     
     queries, query_strings = read_queries_file(queries_fpath)
     genome_filepaths = read_genome_filepaths(input_fpath)
     
-    printv(f"Found {len(genome_filepaths)} genome files.", 1)
-    print(f"Searching for {len(queries)} queries.")
+    printv(f"Found {len(genome_filepaths)} genome files.", V1)
+    printv(f"Searching for {len(queries)} queries.", V1)
+    printv(f"Using batch size: {batch_size}", V1)
 
     outfpath = f"{outdir}/{outfname}"
     column_names = [
@@ -139,43 +156,46 @@ def main(args):
         jit_search = eqx.filter_jit(static_multisearch_matrix_batched)
         
 
-    ncontigs = 0
+    ngenomes = len(genome_filepaths)
+    ncontigs = nrows0
     contig_length = 0
     matrix = jnp.zeros([ncontigs, contig_length], dtype=queries.dtype)
     query_length=queries.shape[1]
     repad_count1 = 0
     repad_count2 = 0
     repad_count3 = 0
-    for genome_fpath in genome_filepaths:
+    printv(f"Processing genomes...", V1)
+    time00 = time.time()
+    for genome_idx, genome_fpath in enumerate(genome_filepaths):
         time0 = time.time()
         
         # Load contigs into a matrix from the contig file.
-        printv("\tLoading genome file...", 1)
+        printv(f"  Processing genome file {genome_idx+1}/{ngenomes}", V2)
         contigs_list = process_contig_file(genome_fpath)
         contigs = get_contigs_matrix(contigs_list, pad_val=PAD_VAL)
-        printv(f"\tLoaded {len(contigs_list)} contigs.", 1)
-        printv(f"\tContigs matrix shape: {contigs.shape}.", 1)
+        printv(f"  Loaded {len(contigs_list)} contigs.", 3)
+        printv(f"\tContigs matrix shape: {contigs.shape}.", V4)
         
         # Add padding if contigs are shorter than the query.
         # Should be unlikely, so issue a warning if so?
         if contigs.shape[1] < query_length:
             npad = query_length - contigs.shape[1]
-            contigs = pad_matrix(contigs, npad, PAD_VAL, 1)
-            contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, 1)
+            contigs = pad_matrix(contigs, npad, PAD_VAL, V1)
+            contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
             contig_length = contigs.shape[1]
             warnings.warn("\tRepadding: Query is longer than matrix sequences!")
             repad_count1 += 1
         elif contigs.shape[1] > contig_length:
-            contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, 1)
+            contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
             contig_length = contigs.shape[1]
-            printv("\tRepadding to accommodate increased matrix!", 2)
+            printv("\tRepadding to accommodate increased matrix!", V3)
             repad_count2 += 1
         elif contigs.shape[1] < contig_length:
             npad = contig_length - contigs.shape[1]
-            contigs = pad_matrix(contigs, npad, PAD_VAL, 1)
+            contigs = pad_matrix(contigs, npad, PAD_VAL, V1)
             contig_length = contigs.shape[1]
             repad_count3 += 1
-        printv(f"\tContigs matrix shape post padding: {contigs.shape}.", 1)
+        printv(f"\tContigs matrix shape post padding: {contigs.shape}.", V4)
 
         # Now, with new shape, adjust the matrix used for storage
         nrows, ncols = contigs.shape
@@ -184,13 +204,13 @@ def main(args):
             matrix = np.zeros(newshape, dtype=contigs.dtype)
         matrix[:] = PAD_VAL
         matrix[0:nrows,0:ncols] = contigs
-        printv(f"\tStorage matrix shape: {matrix.shape}.", 2)
+        printv(f"\tStorage matrix shape: {matrix.shape}.", V3)
         
         # Perform search
-        printv("\tSearching for query...", 1, flush=True)
-        printv(f"\tcontig_length: {contig_length}", 3)
-        printv(f"\tquery_length: {query_length}", 3)
-        printv(f"\tbatch_size: {batch_size}", 3)
+        printv("\tSearching for queries...", V2, flush=True)
+        printv(f"\tcontig_length: {contig_length}", VDEBUG)
+        printv(f"\tquery_length: {query_length}", VDEBUG)
+        printv(f"\tbatch_size: {batch_size}", VDEBUG)
         t0 = time.time()
         min_locs_all, min_dists_all = jit_search(
             matrix, queries, 
@@ -203,9 +223,9 @@ def main(args):
         min_locs_all = min_locs_all[:,0:nrows]
         min_dists_all = min_dists_all[:,0:nrows]
 
-        printv(f"\tFinished searching in {search_time:.4g} sec", 1, flush=True)
+        printv(f"\tFinished searching in {search_time:.4g} sec", 2, flush=True)
 
-        printv("\tWriting search results...", 3)
+        printv("\tWriting search results...", V4)
         t0 = time.time()
         for i in range(len(queries)):
             query = queries[i]
@@ -216,21 +236,17 @@ def main(args):
             # Find close matches
             nearest_match_dist = np.min(min_dists)
             nearest_match_idxs = np.where(min_dists == nearest_match_dist)[0]
-            printv(f"\t  Nearest match distance: {nearest_match_dist}", 3)
-            
-            # if len(nearest_match_idxs) > 1:
-            #     msg = "Found {} contigs with a near match (d={})".format(
-            #         len(nearest_match_idxs), nearest_match_dist)
-            #     warnings.warn(msg)
+            printv(f"\t  Nearest match distance: {nearest_match_dist}", V4)
             
             for idx in nearest_match_idxs:
                 printv("\t  Found near match (d={}) at contig index {}".format(
-                    nearest_match_dist, idx
-                ), 3)
+                       nearest_match_dist, idx), V4)
 
             contig_segments = []
             location_on_contigs = []
-            for c, loc in zip(contigs[nearest_match_idxs], min_locs[nearest_match_idxs]):
+            for c, loc in zip(
+                contigs[nearest_match_idxs], min_locs[nearest_match_idxs]
+            ):
                 result = array_to_gene_seq(c[loc:loc + len(query)])
                 left_pad_arr = np.array(["_"] * pad_left)
                 right_pad_arr = np.array(["_"] * pad_right)
@@ -267,11 +283,16 @@ def main(args):
                 contig_segments=contig_segments,
                 time_elapsed=search_time,
             )
-        t1 = time.time()
-        printv(f"\tFinished writing in {t1 - t0:.4g} sec", 3, flush=True)
-        time1 = time.time()
-        printv(f"Time elapsed: {time1 - time0:.4f} sec", 1)
 
+        t1 = time.time()
+        printv(f"\tFinished writing in {t1 - t0:.4g} sec", V4, flush=True)
+        time1 = time.time()
+        printv(f"  Time elapsed: {time1 - time0:.4g} sec", V2)
+    
+    printv("Processing complete!", V1)
+    printv(f"Number of repaddings (matrix expansion): {repad_count2}", V1)
+    printv(f"Number of repaddings (contig length < query): {repad_count1}", V1)
+    printv(f"Total time elapsed: {time.time()-time00:.4g} sec", V1)
 
 
 #######################

@@ -114,16 +114,17 @@ from .conftest import DATDIR, TMPDIR, remove_dir
     ],
 ])
 @pytest.mark.parametrize("batch_size", [1, 2, 4, 8, 16, 32, 64])
+@pytest.mark.parametrize("nrows0", [0, 1, 4, 32])
 def test_multiquery_genome_batch(
         infile, queries_fpath, outdir, pad_left, pad_right, 
-        exp_dists, exp_idxs, exp_locs, exp_seqs, batch_size,
+        exp_dists, exp_idxs, exp_locs, exp_seqs, batch_size, nrows0
 ):
     from natvar.multiquery_genome_batch import parse_args, main
     
     outfname = "q_batch_results.tsv"
     argstring = f"-q {DATDIR}/{queries_fpath} -i {DATDIR}/{infile} " \
                 + f"-o {outdir} -f {outfname} -pl {pad_left} -pr {pad_right} " \
-                + f"--batch_size {batch_size} -v 3"
+                + f"--batch_size {batch_size} -v 3 --nrows0 {nrows0}"
     
     arglist = argstring.split(" ")
     args = parse_args(arglist)

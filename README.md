@@ -20,6 +20,11 @@ Check that tests pass:
 pytest tests
 ```
 
+If a GPU is available, the required cuda dependencies can be installed via
+```bash
+python -m pip install -e ".[cuda]"
+```
+
 ## Query a single genome file for a sequence string
 
 We can use the command `query-genome` to query a single genome file for a particular sequence:
