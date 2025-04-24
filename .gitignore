@@ -6,6 +6,7 @@ tests/_tmp/
 .github/CODEOWNERS
 delme.*
 data/assemblies/
+env-cuda/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
