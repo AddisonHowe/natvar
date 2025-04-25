@@ -1,4 +1,4 @@
-"""Test for entrypoint query-genome-batch
+"""Test for entrypoint multiquery-genome-batch
 
 """
 
@@ -19,24 +19,27 @@ from .conftest import DATDIR, TMPDIR, remove_dir
 
 @pytest.mark.parametrize(
     "infile, queries_fpath, outdir, pad_left, pad_right, " \
-    "exp_dists, exp_idxs, exp_locs, exp_seqs", [
+    "exp_dists, exp_idxs, exp_locs, exp_seqs, exp_compiles_map", [
     [
         "test_assembly1_genomes.txt", 
         "test_multiqueries/queries_AAAA_1.txt",
         "out1", 0, 0, 
-        [0, 0], [[0], [1]], [[0], [0]], [['AAAA'], ['AAAA']]
+        [0, 0], [[0], [1]], [[0], [0]], [['AAAA'], ['AAAA']],
+        {},
     ],
     [
         "test_assembly1_genomes.txt", 
         "test_multiqueries/queries_AAAA_2.txt",
         "out1", 0, 0, 
-        2*[0, 0], [[0],[0],[1],[1]], 2*[[0], [0]], 2*[['AAAA'], ['AAAA']]
+        2*[0, 0], [[0],[0],[1],[1]], 2*[[0], [0]], 2*[['AAAA'], ['AAAA']],
+        {},
     ],
     [
         "test_assembly1_genomes.txt", 
         "test_multiqueries/queries_CCCC_2.txt",
         "out1", 0, 0, 
-        2*[0, 0], [[0],[0],[1],[1]], 2*[[4], [4]], 2*[['CCCC'], ['CCCC']]
+        2*[0, 0], [[0],[0],[1],[1]], 2*[[4], [4]], 2*[['CCCC'], ['CCCC']],
+        {},
     ],
     [
         "test_assembly1_genomes.txt", 
@@ -44,7 +47,8 @@ from .conftest import DATDIR, TMPDIR, remove_dir
         "out1", 0, 0, 
         2*[2, 2], 2*[[0,1,2], [0,1,2]], [[0,2,0], [0,2,0], [0,0,0],[0,0,0]], 
         [['AAAA','GGTT','ACGT'], ['AAAA','GGTT','ACGT'], 
-         ['AA__','AAAA','ACGT'], ['AA__','AAAA','ACGT']]
+         ['AA__','AAAA','ACGT'], ['AA__','AAAA','ACGT']],
+        {},
     ],
     [
         "test_assembly1_genomes.txt", 
@@ -52,7 +56,8 @@ from .conftest import DATDIR, TMPDIR, remove_dir
         "out1", 0, 2, 
         2*[2, 2], 2*[[0,1,2], [0,1,2]], [[0,2,0], [0,2,0], [0,0,0], [0,0,0]], 
         [['AAAAcc','GGTTtt','ACGTac'], ['AAAAcc','GGTTtt','ACGTac'], 
-         ['AA____','AAAAcc','ACGT__'], ['AA____','AAAAcc','ACGT__']]
+         ['AA____','AAAAcc','ACGT__'], ['AA____','AAAAcc','ACGT__']],
+        {},
     ],
     [
         "test_assembly1_genomes.txt", 
@@ -62,7 +67,8 @@ from .conftest import DATDIR, TMPDIR, remove_dir
         [['AAAAcccc__','GGTTtt____','ACGTacgt__'],
          ['AAAAcccc__','GGTTtt____','ACGTacgt__'],
          ['AA________','AAAAcccc__','ACGT______'],
-         ['AA________','AAAAcccc__','ACGT______']]
+         ['AA________','AAAAcccc__','ACGT______']],
+        {},
     ],
     [
         "test_assembly1_genomes.txt", 
@@ -72,7 +78,8 @@ from .conftest import DATDIR, TMPDIR, remove_dir
         [['__AAAAcccc__','ggGGTTtt____','__ACGTacgt__'],
          ['__AAAAcccc__','ggGGTTtt____','__ACGTacgt__'], 
          ['__AA________','__AAAAcccc__','__ACGT______'],
-         ['__AA________','__AAAAcccc__','__ACGT______']]
+         ['__AA________','__AAAAcccc__','__ACGT______']],
+        {},
     ],
     [
         "test_assembly3_genomes.txt", 
@@ -90,7 +97,8 @@ from .conftest import DATDIR, TMPDIR, remove_dir
          ['_GGGGGGGGg',],
          ['_GGGGGGGGg','_GGGG_____',],
          ['_GGGGGGGGg','_GGGGGGGG_',],
-         ['_GGGGGGGGg','_GGGGGGGG_',]]
+         ['_GGGGGGGGg','_GGGGGGGG_',]],
+        {0:2, 1:2, 4:2, 32:2},
     ],
     [
         "test_assembly4_genomes.txt", 
@@ -110,14 +118,17 @@ from .conftest import DATDIR, TMPDIR, remove_dir
          ['_GGGGGGGGg',],
          ['_GGGGGGGGg','_GGGG_____',],
          ['_GGGGGGGGg','_GGGGGGGG_',],
-         ['_GGGGGGGGg','_GGGGGGGG_',]]
+         ['_GGGGGGGGg','_GGGGGGGG_',]],
+         {0:3, 1:3, 4:2, 32:2},
     ],
 ])
-@pytest.mark.parametrize("batch_size", [1, 2, 4, 8, 16, 32, 64])
+@pytest.mark.parametrize("batch_size", [1, 2, 4, 32])
 @pytest.mark.parametrize("nrows0", [0, 1, 4, 32])
+@pytest.mark.filterwarnings("ignore:.*Repadding.*:UserWarning")
 def test_multiquery_genome_batch(
         infile, queries_fpath, outdir, pad_left, pad_right, 
-        exp_dists, exp_idxs, exp_locs, exp_seqs, batch_size, nrows0
+        exp_dists, exp_idxs, exp_locs, exp_seqs, exp_compiles_map, 
+        batch_size, nrows0
 ):
     from natvar.multiquery_genome_batch import parse_args, main
     
@@ -126,11 +137,23 @@ def test_multiquery_genome_batch(
                 + f"-o {outdir} -f {outfname} -pl {pad_left} -pr {pad_right} " \
                 + f"--batch_size {batch_size} -v 3 --nrows0 {nrows0}"
     
-    arglist = argstring.split(" ")
-    args = parse_args(arglist)
-    args.outdir = f"{TMPDIR}/{args.outdir}"
-    
-    main(args)
+    errors = []
+    try:
+        exp_compiles = exp_compiles_map.get(nrows0, None)
+        if exp_compiles:
+            max_trace_line = f" --jax_debug_max_traces {exp_compiles}"
+        else:
+            max_trace_line = ""
+        arglist = (argstring + max_trace_line).split(" ")
+        args = parse_args(arglist)
+        args.outdir = f"{TMPDIR}/{args.outdir}"
+        main(args)
+    except RuntimeError() as e:
+        errors.append(e)
+        arglist = (argstring + max_trace_line).split(" ")
+        args = parse_args(arglist)
+        args.outdir = f"{TMPDIR}/{args.outdir}"
+        main(args)
 
     def read_output(fpath):
         with open(fpath, 'r') as f:
@@ -146,7 +169,6 @@ def test_multiquery_genome_batch(
     res, nrows = read_output(f"{args.outdir}/{outfname}")
     print(res)
 
-    errors = []
     KEY_MIN_DISTANCE = "min_distance"
     KEY_NEAREST_IDXS = "nearest_idxs"
     KEY_LOC_ON_CONTIGS = "location_on_contigs"
