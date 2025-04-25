@@ -6,3 +6,4 @@ dependencies:
   - pip
   - pip:
     - -e .[dev,jupyter,jax]
+    # - -e .[dev,jupyter,jax-cuda]

@@ -164,6 +164,7 @@ def main(args):
     repad_count1 = 0
     repad_count2 = 0
     repad_count3 = 0
+    row_multiplier = 1
     printv(f"Processing genomes...", V1)
     time00 = time.time()
     for genome_idx, genome_fpath in enumerate(genome_filepaths):
@@ -199,9 +200,18 @@ def main(args):
 
         # Now, with new shape, adjust the matrix used for storage
         nrows, ncols = contigs.shape
+        # if nrows > matrix.shape[0] or ncols > matrix.shape[1]:
+        #     newshape = (max(nrows, matrix.shape[0]), max(ncols, matrix.shape[1]))
+        #     matrix = np.zeros(newshape, dtype=contigs.dtype)
+        newshape = list(matrix.shape)
+        if nrows > matrix.shape[0]:
+            newshape[0] = int(row_multiplier*nrows)
+            row_multiplier = 1.5 
+        if ncols > matrix.shape[1]:
+            newshape[1] = ncols
         if nrows > matrix.shape[0] or ncols > matrix.shape[1]:
-            newshape = (max(nrows, matrix.shape[0]), max(ncols, matrix.shape[1]))
             matrix = np.zeros(newshape, dtype=contigs.dtype)
+
         matrix[:] = PAD_VAL
         matrix[0:nrows,0:ncols] = contigs
         printv(f"\tStorage matrix shape: {matrix.shape}.", V3)

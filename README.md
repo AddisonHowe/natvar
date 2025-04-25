@@ -12,7 +12,7 @@ and create a conda environment by running
 ```bash
 conda env create -p ./env -f environment.yml
 conda activate env
-python -m pip install -e ".[dev,jax,jupyter]"
+python -m pip install -e ".[dev,jupyter,jax]"
 ```
 
 Check that tests pass:
@@ -22,7 +22,7 @@ pytest tests
 
 If a GPU is available, the required cuda dependencies can be installed via
 ```bash
-python -m pip install -e ".[cuda]"
+python -m pip install -e ".[jax-cuda]"
 ```
 
 ## Query a single genome file for a sequence string
