@@ -69,7 +69,7 @@ def process_contig_file(fpath):
     return contig_list
 
 
-def get_contigs_matrix(contigs_list, pad_val=5):
+def get_contigs_matrix(contigs_list, pad_val):
     """Convert a list of np.uint8 contig sequences to a padded 2d-array."""
     lengths = [len(contig) for contig in contigs_list]
     contigs = pad_val * np.ones(
@@ -80,14 +80,14 @@ def get_contigs_matrix(contigs_list, pad_val=5):
     return contigs
 
 
-def load_genome_set(genome_filelist, pad_val):
+def load_genome_set(genome_filelist, pad_val=5):
     """Process a number of genome files into a matrix format."""
     contig_matrices = []
     genome_sizes = []
     nrows = 0
     ncols = 0
     for fpath in genome_filelist:
-        m = get_contigs_matrix(fpath)
+        m = get_contigs_matrix(fpath, pad_val=pad_val)
         r, c = m.shape
         contig_matrices.append(m)
         genome_sizes.append(r)

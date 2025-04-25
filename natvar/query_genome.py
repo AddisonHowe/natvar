@@ -22,12 +22,14 @@ import time
 import numpy as np
 import warnings
 
-from .helpers import array_to_gene_seq, gene_seq_to_array
+from .helpers import array_to_gene_seq, gene_seq_to_array, pad_matrix_for_batch_size
 from .io import process_contig_file, get_contigs_matrix
 from .core import search_matrix_for_query
 # from .jax.core import search_matrix_for_query as jax_search_matrix
 from .jax.core import static_search_matrix_batched as jax_search_matrix
 
+GEN_NT_VAL = 4
+PAD_VAL = 5
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
@@ -89,7 +91,10 @@ def main(args):
     printv("Loading genome file...")
     contigs_list = process_contig_file(genome_fpath)
     contig_lengths = [len(c) for c in contigs_list]
-    contigs = get_contigs_matrix(contigs_list, pad_val=4)
+    contigs = get_contigs_matrix(contigs_list, pad_val=PAD_VAL)
+    contigs = pad_matrix_for_batch_size(
+        contigs, len(query_string), batch_size, pad_val=PAD_VAL, axis=1,
+    )
     printv(f"Loaded {len(contigs_list)} contigs.")
     printv(f"Max length contig: {np.max(contig_lengths)}", 2)
     printv(f"Shape of loaded contigs matrix: {contigs.shape}", 2)

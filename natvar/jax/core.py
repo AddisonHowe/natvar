@@ -95,8 +95,7 @@ def static_search_array(
         new_min_val = nmuts * improved + min_val * (1 - improved)
         return (new_min_idx, new_min_val), None
     
-    init_state = (0, 1000000000)
-    # scan_range = jnp.arange(num_scans)
+    init_state = (0, 1000000)
     final_state, _ = jax.lax.scan(min_search, init_state, scan_range)
     final_min_idx, final_min_val = final_state
     return final_min_idx, final_min_val
@@ -154,18 +153,22 @@ def static_search_matrix_batched(
     """
     n = array_length
     k = query_length
-    nbatches = int(n // batch_size)
-    if n % batch_size != 0:
-        msg = "Batch size b must divide number of columns n."
-        msg += f" Got n={n}, b={batch_size}."
+    nqueries = n - k + 1
+    if nqueries % batch_size != 0:
+        msg = "Batch size B must divide number of queries Nq=n-k+1."
+        msg += f" Got Nq={nqueries}, B={batch_size}."
         raise RuntimeError(msg)
+    nbatches = int(nqueries // batch_size)
     
-    r = jnp.arange(n)
+    q_range = jnp.arange(nqueries)
     def search_helper(i):
         return static_search_matrix(
             matrix, query, array_length, query_length, 
-            scan_range=jax.lax.dynamic_slice(r, (i*batch_size,), (batch_size,))
+            scan_range=jax.lax.dynamic_slice(
+                q_range, (i*batch_size,), (batch_size,)
+            )
         )
+    
     min_idxs, min_vals = jax.lax.map(
         search_helper, jnp.arange(nbatches), batch_size=1
     )    

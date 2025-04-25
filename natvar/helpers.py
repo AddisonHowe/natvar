@@ -49,9 +49,12 @@ def pad_matrix(matrix, p, pad_val, axis):
     return np.concatenate([matrix, padding], axis=axis)
 
 
-def pad_matrix_for_batch_size(matrix, batch_size, pad_val, axis):
+def pad_matrix_for_batch_size(
+        matrix, query_length, batch_size, pad_val, axis
+):
     n = matrix.shape[axis]
-    r = n % batch_size
+    n_queries = n - query_length + 1
+    r = n_queries % batch_size
     if r > 0:
         matrix = pad_matrix(matrix, batch_size - r, pad_val, axis)
     return matrix

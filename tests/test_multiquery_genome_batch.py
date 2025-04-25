@@ -121,6 +121,28 @@ from .conftest import DATDIR, TMPDIR, remove_dir
          ['_GGGGGGGGg','_GGGGGGGG_',]],
          {0:3, 1:3, 4:2, 32:2},
     ],
+    [
+        "test_assembly1_genomes.txt", 
+        "test_multiqueries/queries_G8_A8.txt",
+        "out1", 1, 1, 
+        [4, 4, 7, 4], [[1],[0],[2],[1],], [[0],[0],[0],[0]],
+        [['_GGGGTTTT_',],
+         ['_AAAACCCC_',], 
+         ['_ACGT_____',],
+         ['_AAAACCCC_',]],
+        {},
+    ],
+    [
+        "test_assembly1_genomes.txt", 
+        "test_multiqueries/queries_G10_A10.txt",
+        "out1", 1, 1, 
+        [6, 6, 9, 6], [[1],[0],[2],[1],], [[0],[0],[0],[0]],
+        [['_GGGGTTTT___',],
+         ['_AAAACCCC___',], 
+         ['_ACGT_______',],
+         ['_AAAACCCC___',]],
+        {},
+    ],
 ])
 @pytest.mark.parametrize("batch_size", [1, 2, 4, 32])
 @pytest.mark.parametrize("nrows0", [0, 1, 4, 32])

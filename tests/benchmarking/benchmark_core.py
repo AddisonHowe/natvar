@@ -23,11 +23,13 @@ from natvar.core import search_matrix_for_query
 DATDIR = f"{DATDIR}/benchmarking"
 OUTDIR = f"{TMPDIR}/benchmarking"
 
+PAD_VAL = 5
+
 os.makedirs(OUTDIR, exist_ok=True)
 
 def load_genome(fpath):
     contigs_list = process_contig_file(fpath)
-    contigs = get_contigs_matrix(contigs_list, pad_val=4)
+    contigs = get_contigs_matrix(contigs_list, pad_val=PAD_VAL)
     return contigs
 
 def write_results(func_name, run_name, niters, warmup_time, avg_time, std_time):
