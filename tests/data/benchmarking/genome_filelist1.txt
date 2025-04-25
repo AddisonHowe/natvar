@@ -1,0 +1,4 @@
+tests/data/benchmarking/SAMD00000649.contigs.fa.gz
+tests/data/benchmarking/SAMD00000699.contigs.fa.gz
+tests/data/benchmarking/SAMD00000724.contigs.fa.gz
+tests/data/benchmarking/SAMD00000754.contigs.fa.gz

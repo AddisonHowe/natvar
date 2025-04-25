@@ -61,32 +61,9 @@ def parse_args(args):
     parser.add_argument('--nrows0', type=int, default=0)
     parser.add_argument('-v', '--verbosity', type=int, default=2)
     parser.add_argument('--jax_debug_max_traces', type=int, default=0)
+    # parser.add_argument('--jax_debug_num_compiles', type=int, default=0)
 
     return parser.parse_args(args)
-
-
-def write_results(
-        out_fpath, *, 
-        genome_fpath, 
-        query_string, 
-        min_dist,
-        nearest_idxs,
-        location_on_contigs,
-        contig_segments,
-        time_elapsed,
-):
-    vals = [
-        genome_fpath,
-        query_string,
-        min_dist,
-        nearest_idxs,
-        location_on_contigs,
-        contig_segments,
-        time_elapsed,
-    ]
-    line = "\t".join([str(v) for v in vals])
-    with open(out_fpath, 'a') as f:
-        f.write(line + "\n")
 
 
 def read_queries_file(queries_fpath):
@@ -102,7 +79,7 @@ def read_genome_filepaths(input_fpath):
     with open(input_fpath, 'r') as f:
         files = [line.strip() for line in f.readlines()]
     return files
-
+        
 
 def main(args):
     input_fpath = args.input_fpath
@@ -125,6 +102,7 @@ def main(args):
     printv(f"Searching genome files listed in: {input_fpath}", V1)
     printv(f"Queries file: {queries_fpath}", V1)
     
+    # Load input data: queries and genomes
     queries, query_strings = read_queries_file(queries_fpath)
     genome_filepaths = read_genome_filepaths(input_fpath)
     
@@ -132,20 +110,11 @@ def main(args):
     printv(f"Searching for {len(queries)} queries.", V1)
     printv(f"Using batch size: {batch_size}", V1)
 
+    # Initialize the output file with a header
     outfpath = f"{outdir}/{outfname}"
-    column_names = [
-        "genome_fpath",
-        "query_string",
-        "min_distance",
-        "nearest_idxs",
-        "location_on_contigs",
-        "contig_segments",
-        "time_elapsed",
-    ]
-    with open(outfpath, 'w') as f:
-        f.write("\t".join(column_names) + "\n")
-
+    _write_header(outfpath)
     
+    # JIT the multisearch function and apply a max_trace if specified
     if max_traces:
         jit_search = eqx.filter_jit(
             eqx.debug.assert_max_traces(max_traces=max_traces)(
@@ -155,7 +124,7 @@ def main(args):
     else:
         jit_search = eqx.filter_jit(static_multisearch_matrix_batched)
         
-
+    # Initialization prior to main loop
     ngenomes = len(genome_filepaths)
     ncontigs = nrows0
     contig_length = 0
@@ -179,39 +148,18 @@ def main(args):
         
         # Add padding if contigs are shorter than the query.
         # Should be unlikely, so issue a warning if so?
-        if contigs.shape[1] < query_length:
-            npad = query_length - contigs.shape[1]
-            contigs = pad_matrix(contigs, npad, PAD_VAL, V1)
-            contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
-            contig_length = contigs.shape[1]
-            warnings.warn("\tRepadding: Query is longer than matrix sequences!")
-            repad_count1 += 1
-        elif contigs.shape[1] > contig_length:
-            contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
-            contig_length = contigs.shape[1]
-            printv("\tRepadding to accommodate increased matrix!", V3)
-            repad_count2 += 1
-        elif contigs.shape[1] < contig_length:
-            npad = contig_length - contigs.shape[1]
-            contigs = pad_matrix(contigs, npad, PAD_VAL, V1)
-            contig_length = contigs.shape[1]
-            repad_count3 += 1
+        contigs, contig_length, repad_counts = _pad_contigs(
+            contigs, query_length, contig_length, batch_size, 
+            [repad_count1, repad_count2, repad_count3], 
+            printv,
+        )
+        repad_count1, repad_count2, repad_count3 = repad_counts
         printv(f"\tContigs matrix shape post padding: {contigs.shape}.", V4)
 
         # Now, with new shape, adjust the matrix used for storage
-        nrows, ncols = contigs.shape
-        # if nrows > matrix.shape[0] or ncols > matrix.shape[1]:
-        #     newshape = (max(nrows, matrix.shape[0]), max(ncols, matrix.shape[1]))
-        #     matrix = np.zeros(newshape, dtype=contigs.dtype)
-        newshape = list(matrix.shape)
-        if nrows > matrix.shape[0]:
-            newshape[0] = int(row_multiplier*nrows)
-            row_multiplier = 1.5 
-        if ncols > matrix.shape[1]:
-            newshape[1] = ncols
-        if nrows > matrix.shape[0] or ncols > matrix.shape[1]:
-            matrix = np.zeros(newshape, dtype=contigs.dtype)
-
+        matrix, nrows, ncols, row_multiplier = _adjust_storage_matrix(
+            contigs, matrix, row_multiplier,
+        )
         matrix[:] = PAD_VAL
         matrix[0:nrows,0:ncols] = contigs
         printv(f"\tStorage matrix shape: {matrix.shape}.", V3)
@@ -230,10 +178,11 @@ def main(args):
         )
         t1 = time.time()
         search_time = t1 - t0
+        printv(f"\tFinished searching in {search_time:.4g} sec", 2, flush=True)
+
+        # Identify for each genome the location of minimums across the contigs
         min_locs_all = min_locs_all[:,0:nrows]
         min_dists_all = min_dists_all[:,0:nrows]
-
-        printv(f"\tFinished searching in {search_time:.4g} sec", 2, flush=True)
 
         printv("\tWriting search results...", V4)
         t0 = time.time()
@@ -243,66 +192,170 @@ def main(args):
             min_locs = min_locs_all[i]
             min_dists = min_dists_all[i]
 
-            # Find close matches
-            nearest_match_dist = np.min(min_dists)
-            nearest_match_idxs = np.where(min_dists == nearest_match_dist)[0]
-            printv(f"\t  Nearest match distance: {nearest_match_dist}", V4)
+            # Find closest matches
+            res = _find_closest_matches(
+                query, contigs,
+                min_locs, min_dists, 
+                pad_left, pad_right, 
+                printv
+            )
+            nearest_dist, nearest_idxs, loc_on_contigs, contig_segments = res
             
-            for idx in nearest_match_idxs:
-                printv("\t  Found near match (d={}) at contig index {}".format(
-                       nearest_match_dist, idx), V4)
-
-            contig_segments = []
-            location_on_contigs = []
-            for c, loc in zip(
-                contigs[nearest_match_idxs], min_locs[nearest_match_idxs]
-            ):
-                result = array_to_gene_seq(c[loc:loc + len(query)])
-                left_pad_arr = np.array(["_"] * pad_left)
-                right_pad_arr = np.array(["_"] * pad_right)
-                left_pad_start = max(loc - pad_left, 0)
-                left_pad_stop = loc
-                right_pad_start = loc + len(query)
-                right_pad_stop = min(loc + len(query) + pad_right, len(c))
-                left_pad_len = left_pad_stop - left_pad_start
-                right_pad_len = right_pad_stop - right_pad_start
-                if left_pad_len > 0:
-                    left_pad_arr[-left_pad_len:] = array_to_gene_seq(
-                        c[left_pad_start:left_pad_stop], dtype=str
-                    )
-                if right_pad_len > 0:
-                    right_pad_arr[:right_pad_len] = array_to_gene_seq(
-                        c[right_pad_start:right_pad_stop], dtype=str
-                    )
-                left_pad_string = "".join(left_pad_arr)
-                right_pad_string = "".join(right_pad_arr)
-                contig_segments.append(
-                    left_pad_string.lower() \
-                        + b"".join(result).decode() \
-                        + right_pad_string .lower()
-                )
-                location_on_contigs.append(loc.item())
-            
-            write_results(
+            # Write results to output file
+            _write_results(
                 outfpath,
                 genome_fpath=genome_fpath,
                 query_string=query_string,
-                min_dist=nearest_match_dist,
-                nearest_idxs=nearest_match_idxs.tolist(),
-                location_on_contigs=location_on_contigs,
+                min_dist=nearest_dist,
+                nearest_idxs=nearest_idxs.tolist(),
+                location_on_contigs=loc_on_contigs,
                 contig_segments=contig_segments,
                 time_elapsed=search_time,
             )
 
-        t1 = time.time()
-        printv(f"\tFinished writing in {t1 - t0:.4g} sec", V4, flush=True)
         time1 = time.time()
+        printv(f"\tFinished writing in {time1 - t0:.4g} sec", V4, flush=True)
         printv(f"  Time elapsed: {time1 - time0:.4g} sec", V2)
     
     printv("Processing complete!", V1)
     printv(f"Number of repaddings (matrix expansion): {repad_count2}", V1)
     printv(f"Number of repaddings (contig length < query): {repad_count1}", V1)
     printv(f"Total time elapsed: {time.time()-time00:.4g} sec", V1)
+
+
+########################
+##  Helper functions  ##
+########################
+
+def _write_header(outfpath):
+    column_names = [
+        "genome_fpath",
+        "query_string",
+        "min_distance",
+        "nearest_idxs",
+        "location_on_contigs",
+        "contig_segments",
+        "time_elapsed",
+    ]
+    with open(outfpath, 'w') as f:
+        f.write("\t".join(column_names) + "\n")
+
+
+def _write_results(
+        out_fpath, *, 
+        genome_fpath, 
+        query_string, 
+        min_dist,
+        nearest_idxs,
+        location_on_contigs,
+        contig_segments,
+        time_elapsed,
+):
+    vals = [
+        genome_fpath,
+        query_string,
+        min_dist,
+        nearest_idxs,
+        location_on_contigs,
+        contig_segments,
+        time_elapsed,
+    ]
+    line = "\t".join([str(v) for v in vals])
+    with open(out_fpath, 'a') as f:
+        f.write(line + "\n")
+
+
+def _pad_contigs(
+        contigs, query_length, contig_length, 
+        batch_size, repad_counts,
+        printv
+):
+    # Add padding if contigs are shorter than the query.
+    # Should be unlikely, so issue a warning if so?
+    repad_count1, repad_count2, repad_count3 = repad_counts
+    if contigs.shape[1] < query_length:
+        npad = query_length - contigs.shape[1]
+        contigs = pad_matrix(contigs, npad, PAD_VAL, V1)
+        contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
+        contig_length = contigs.shape[1]
+        warnings.warn("\tRepadding: Query is longer than matrix sequences!")
+        repad_count1 += 1
+    elif contigs.shape[1] > contig_length:
+        contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
+        contig_length = contigs.shape[1]
+        printv("\tRepadding to accommodate increased matrix!", V3)
+        repad_count2 += 1
+    elif contigs.shape[1] < contig_length:
+        npad = contig_length - contigs.shape[1]
+        contigs = pad_matrix(contigs, npad, PAD_VAL, V1)
+        contig_length = contigs.shape[1]
+        repad_count3 += 1
+    repad_counts = (repad_count1, repad_count2, repad_count3)
+    return contigs, contig_length, repad_counts
+
+
+def _adjust_storage_matrix(contigs, matrix, row_multiplier):
+    nrows, ncols = contigs.shape
+    newshape = list(matrix.shape)
+    if nrows > matrix.shape[0]:
+        newshape[0] = int(row_multiplier * nrows)
+        row_multiplier = 1.5 
+    if ncols > matrix.shape[1]:
+        newshape[1] = ncols
+    if nrows > matrix.shape[0] or ncols > matrix.shape[1]:
+        matrix = np.zeros(newshape, dtype=contigs.dtype)
+    return matrix, nrows, ncols, row_multiplier
+
+
+def _find_closest_matches(
+        query, contigs,
+        min_locs, min_dists, 
+        pad_left, pad_right, 
+        printv,
+):
+    nearest_match_dist = np.min(min_dists)
+    nearest_match_idxs = np.where(min_dists == nearest_match_dist)[0]
+    printv(f"\t  Nearest match distance: {nearest_match_dist}", V4)
+
+    for idx in nearest_match_idxs:
+        printv("\t  Found near match (d={}) at contig index {}".format(
+                nearest_match_dist, idx), V4)
+
+    contig_segments = []
+    location_on_contigs = []
+    for c, loc in zip(contigs[nearest_match_idxs], min_locs[nearest_match_idxs]):
+        result = array_to_gene_seq(c[loc:loc + len(query)])
+        left_pad_arr = np.array(["_"] * pad_left)
+        right_pad_arr = np.array(["_"] * pad_right)
+        left_pad_start = max(loc - pad_left, 0)
+        left_pad_stop = loc
+        right_pad_start = loc + len(query)
+        right_pad_stop = min(loc + len(query) + pad_right, len(c))
+        left_pad_len = left_pad_stop - left_pad_start
+        right_pad_len = right_pad_stop - right_pad_start
+        if left_pad_len > 0:
+            left_pad_arr[-left_pad_len:] = array_to_gene_seq(
+                c[left_pad_start:left_pad_stop], dtype=str
+            )
+        if right_pad_len > 0:
+            right_pad_arr[:right_pad_len] = array_to_gene_seq(
+                c[right_pad_start:right_pad_stop], dtype=str
+            )
+        left_pad_string = "".join(left_pad_arr)
+        right_pad_string = "".join(right_pad_arr)
+        contig_segments.append(
+            left_pad_string.lower() \
+                + b"".join(result).decode() \
+                + right_pad_string .lower()
+        )
+        location_on_contigs.append(loc.item())
+    
+    return (
+        nearest_match_dist, 
+        nearest_match_idxs, 
+        location_on_contigs, 
+        contig_segments, 
+    )
 
 
 #######################
