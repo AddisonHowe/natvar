@@ -98,14 +98,18 @@ def test_search_matrix_for_query(matrix, query, min_locs_exp, min_dists_exp):
     assert not errors, "Errors occurred:\n{}".format("\n".join(errors))
     
 
-@pytest.mark.parametrize("m, axis, batch_size, exp_shape", [
-    [np.ones([3, 5]), 0, 2, (4, 5)],
-    [np.ones([3, 5]), 1, 2, (3, 6)],
+@pytest.mark.parametrize("m, query_length, axis, batch_size, exp_shape", [
+    [np.ones([3, 5]), 1, 0, 2, (4, 5)],
+    [np.ones([3, 5]), 1, 1, 2, (3, 6)],
+    [np.ones([3, 5]), 2, 0, 2, (3, 5)],
+    [np.ones([3, 5]), 2, 1, 2, (3, 5)],
 ])
 @pytest.mark.parametrize("pad_val", [4])
-def test_pad_matrix_for_batch_size(m, axis, batch_size, exp_shape, pad_val):
+def test_pad_matrix_for_batch_size(
+    m, query_length, axis, batch_size, exp_shape, pad_val
+):
     m = pad_matrix_for_batch_size(
-        m, batch_size, pad_val, axis,
+        m, query_length, batch_size, pad_val, axis,
     )
     assert m.shape == exp_shape, f"Bad shape. Got {m.shape}. Expected {exp_shape}."
     

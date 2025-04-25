@@ -11,7 +11,7 @@ def binary_arr_to_int(bin_arr):
     """
     k = bin_arr.shape[-1]
     weights = 1 << jnp.arange(k)[::-1]
-    return bin_arr @ weights
+    return bin_arr @ weights.astype(float)
 
 
 def int_to_binary_arr(int_array, n=None):

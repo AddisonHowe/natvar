@@ -26,11 +26,13 @@ from natvar.jax.core import static_search_matrix_batched
 DATDIR = f"{DATDIR}/benchmarking"
 OUTDIR = f"{TMPDIR}/jax_benchmarking"
 
+PAD_VAL = 5
+
 os.makedirs(OUTDIR, exist_ok=True)
 
 def load_genome(fpath):
     contigs_list = process_contig_file(fpath)
-    contigs = get_contigs_matrix(contigs_list, pad_val=4)
+    contigs = get_contigs_matrix(contigs_list, pad_val=PAD_VAL)
     return contigs
 
 def write_results(
@@ -71,7 +73,7 @@ def test_search_matrix_for_query(fname, name, query_length, batch_size):
     # Warmup
     time0 = timeit.default_timer()
     result = func(
-        contigs, query, batch_size=batch_size, pad_val=4,
+        contigs, query, batch_size=batch_size, pad_val=PAD_VAL,
         print_every=0,
     )
     jax.block_until_ready(result)
@@ -83,7 +85,7 @@ def test_search_matrix_for_query(fname, name, query_length, batch_size):
     for i in range(NITERS):
         time0 = timeit.default_timer()
         result = func(
-            contigs, query, batch_size=batch_size, pad_val=4,
+            contigs, query, batch_size=batch_size, pad_val=PAD_VAL,
             print_every=0,
         )
         time1 = timeit.default_timer()
@@ -158,9 +160,9 @@ def test_static_search_matrix_batched(fname, name, query_length, batch_size):
     func_name = "static_search_matrix_batched"
     func = eqx.filter_jit(static_search_matrix_batched)
     contigs = load_genome(f"{DATDIR}/{fname}")
-    pad_val = 4
-    n = contigs.shape[1]
-    contigs = pad_matrix_for_batch_size(contigs, batch_size, pad_val=pad_val, axis=1)
+    contigs = pad_matrix_for_batch_size(
+        contigs, len(query), batch_size, pad_val=PAD_VAL, axis=1
+    )
     # Warmup
     time0 = timeit.default_timer()
     result = func(

@@ -276,12 +276,16 @@ def _pad_contigs(
     if contigs.shape[1] < query_length:
         npad = query_length - contigs.shape[1]
         contigs = pad_matrix(contigs, npad, PAD_VAL, V1)
-        contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
+        contigs = pad_matrix_for_batch_size(
+            contigs, query_length, batch_size, PAD_VAL, V1
+        )
         contig_length = contigs.shape[1]
         warnings.warn("\tRepadding: Query is longer than matrix sequences!")
         repad_count1 += 1
     elif contigs.shape[1] > contig_length:
-        contigs = pad_matrix_for_batch_size(contigs, batch_size, PAD_VAL, V1)
+        contigs = pad_matrix_for_batch_size(
+            contigs, query_length, batch_size, PAD_VAL, V1
+        )
         contig_length = contigs.shape[1]
         printv("\tRepadding to accommodate increased matrix!", V3)
         repad_count2 += 1

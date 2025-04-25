@@ -22,7 +22,7 @@ import time
 import numpy as np
 import warnings
 
-from .helpers import array_to_gene_seq, gene_seq_to_array
+from .helpers import array_to_gene_seq, gene_seq_to_array, pad_matrix_for_batch_size
 from .io import process_contig_file, get_contigs_matrix
 from .core import search_matrix_for_query
 from .jax.core import search_matrix_for_query as jax_search_matrix
@@ -130,6 +130,9 @@ def main(args):
         printv("Loading genome file...", 1)
         contigs_list = process_contig_file(genome_fpath)
         contigs = get_contigs_matrix(contigs_list, pad_val=PAD_VAL)
+        contigs = pad_matrix_for_batch_size(
+            contigs, len(query_string), batch_size, pad_val=PAD_VAL, axis=1,
+        )
         printv(f"Loaded {len(contigs_list)} contigs.", 1)
         printv(f"Contigs matrix shape: {contigs.shape}.", 1)
         
