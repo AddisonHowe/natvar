@@ -10,6 +10,7 @@ Inputs:
     --pad_right : number of bases to include after query match.
     --nrows0 : number of rows with which to initialize the storage matrix. 
                Can be used to reduce number of recompilations. Default 0.
+    --append : whether to append to the output file without overwrite.
     --verbosity : verbosity level.
 
 Outputs:
@@ -59,6 +60,7 @@ def parse_args(args):
     parser.add_argument('-pl', '--pad_left', type=int, default=0)
     parser.add_argument('-pr', '--pad_right', type=int, default=0)
     parser.add_argument('--nrows0', type=int, default=0)
+    parser.add_argument('--append', action="store_true")
     parser.add_argument('-v', '--verbosity', type=int, default=2)
     parser.add_argument('--jax_debug_max_traces', type=int, default=0)
     # parser.add_argument('--jax_debug_num_compiles', type=int, default=0)
@@ -90,6 +92,7 @@ def main(args):
     pad_left = args.pad_left
     pad_right = args.pad_right
     nrows0 = args.nrows0
+    append = args.append
     verbosity = args.verbosity
     max_traces = args.jax_debug_max_traces
     
@@ -112,7 +115,11 @@ def main(args):
 
     # Initialize the output file with a header
     outfpath = f"{outdir}/{outfname}"
-    _write_header(outfpath)
+    if append:
+        printv(f"Appending to output file: {outfpath}", V1)
+    else:
+        printv(f"Creating output file: {outfpath}", V1)
+        _write_header(outfpath)
     
     # JIT the multisearch function and apply a max_trace if specified
     if max_traces:
