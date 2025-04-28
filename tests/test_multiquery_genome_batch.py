@@ -170,7 +170,7 @@ def test_multiquery_genome_batch(
         args = parse_args(arglist)
         args.outdir = f"{TMPDIR}/{args.outdir}"
         main(args)
-    except RuntimeError() as e:
+    except RuntimeError as e:
         errors.append(e)
         arglist = (argstring + max_trace_line).split(" ")
         args = parse_args(arglist)

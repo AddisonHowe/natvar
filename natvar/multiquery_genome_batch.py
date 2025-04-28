@@ -61,6 +61,7 @@ def parse_args(args):
     parser.add_argument('-pr', '--pad_right', type=int, default=0)
     parser.add_argument('--nrows0', type=int, default=0)
     parser.add_argument('--append', action="store_true")
+    parser.add_argument('--reset_rows_every', type=int, default=0)
     parser.add_argument('-v', '--verbosity', type=int, default=2)
     parser.add_argument('--jax_debug_max_traces', type=int, default=0)
     # parser.add_argument('--jax_debug_num_compiles', type=int, default=0)
@@ -93,6 +94,7 @@ def main(args):
     pad_right = args.pad_right
     nrows0 = args.nrows0
     append = args.append
+    reset_rows_every = args.reset_rows_every
     verbosity = args.verbosity
     max_traces = args.jax_debug_max_traces
     
@@ -144,6 +146,10 @@ def main(args):
     printv(f"Processing genomes...", V1)
     time00 = time.time()
     for genome_idx, genome_fpath in enumerate(genome_filepaths):
+        if reset_rows_every and (genome_idx % reset_rows_every == 0):
+            ncontigs = nrows0
+            matrix = jnp.zeros([ncontigs, contig_length], dtype=queries.dtype)
+            row_multiplier = 1
         time0 = time.time()
         
         # Load contigs into a matrix from the contig file.
@@ -165,10 +171,8 @@ def main(args):
 
         # Now, with new shape, adjust the matrix used for storage
         matrix, nrows, ncols, row_multiplier = _adjust_storage_matrix(
-            contigs, matrix, row_multiplier,
+            contigs, matrix, row_multiplier, PAD_VAL
         )
-        matrix[:] = PAD_VAL
-        matrix[0:nrows,0:ncols] = contigs
         printv(f"\tStorage matrix shape: {matrix.shape}.", V3)
         
         # Perform search
@@ -305,7 +309,7 @@ def _pad_contigs(
     return contigs, contig_length, repad_counts
 
 
-def _adjust_storage_matrix(contigs, matrix, row_multiplier):
+def _adjust_storage_matrix(contigs, matrix, row_multiplier, pad_val):
     nrows, ncols = contigs.shape
     newshape = list(matrix.shape)
     if nrows > matrix.shape[0]:
@@ -314,7 +318,9 @@ def _adjust_storage_matrix(contigs, matrix, row_multiplier):
     if ncols > matrix.shape[1]:
         newshape[1] = ncols
     if nrows > matrix.shape[0] or ncols > matrix.shape[1]:
-        matrix = np.zeros(newshape, dtype=contigs.dtype)
+        matrix = jnp.zeros(newshape, dtype=contigs.dtype)
+    matrix = matrix.at[:].set(pad_val)
+    matrix = matrix.at[0:nrows,0:ncols].set(contigs)
     return matrix, nrows, ncols, row_multiplier
 
 
