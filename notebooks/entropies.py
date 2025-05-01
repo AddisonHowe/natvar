@@ -81,3 +81,47 @@ def plot_entropy(seqs, GENE):
     plt.title(f'{GENE} entropy plot')
     plt.savefig(f'../out/entropy_plots/{GENE}_capped.png')
     
+
+#produce a table of frequencies for each nucleotide at each position
+def frequency_table(seqs):
+    m = len(seqs)
+    n = len(seqs[0])
+    table = np.zeros((4, n))
+    for i in range(m):
+        for j in range(n):
+            table[seqs[i][j]][j] += 1/m 
+    return table 
+
+#produce a plot of the table
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+def plot_table(table):
+    x = np.linspace(-115, 45, 160)  
+    
+    
+    fig, (ax2, ax1) = plt.subplots(2, 1, figsize=(8, 6))
+
+    ax1.scatter(x, table[0], color='darkviolet', label='A', s=3)
+    ax1.scatter(x, table[1], color='firebrick', label='C', s=3)
+    ax1.scatter(x, table[2], color='orange', label='G', s=3)
+    ax1.scatter(x, table[3], color='springgreen', label='T', s=3)
+    ax1.legend()
+    ax1.set_xlabel('Position on Promoter')
+    ax1.set_ylabel('Nucleotide Frequency')
+    ax1.set_ylim(0, 0.05)
+    
+    ax2.scatter(x, table[0], color='darkviolet', label='A', s=3)
+    ax2.scatter(x, table[1], color='firebrick', label='C', s=3)
+    ax2.scatter(x, table[2], color='orange', label='G', s=3)
+    ax2.scatter(x, table[3], color='springgreen', label='T', s=3)
+    ax2.set_ylabel('Nucleotide Frequency')
+    ax2.set_ylim(0.95, 1)
+    
+    
+    plt.tight_layout()
+    plt.show()
+
+
+
+    
+    
