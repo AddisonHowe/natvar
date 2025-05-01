@@ -98,6 +98,15 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 def plot_table(table):
     x = np.linspace(-115, 45, 160)  
     
+    plt.scatter(x, table[0], color='darkviolet', label='A', s=3)
+    plt.scatter(x, table[1], color='firebrick', label='C', s=3)
+    plt.scatter(x, table[2], color='orange', label='G', s=3)
+    plt.scatter(x, table[3], color='springgreen', label='T', s=3)
+    plt.legend()
+    plt.xlabel('Position on Promoter')
+    plt.ylabel('Nucleotide Frequency')
+    plt.show() 
+    
     
     fig, (ax2, ax1) = plt.subplots(2, 1, figsize=(8, 6))
 
