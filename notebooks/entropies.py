@@ -95,7 +95,7 @@ def frequency_table(seqs):
 #produce a plot of the table
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-def plot_table(table):
+def plot_table(table, GENE):
     x = np.linspace(-115, 45, 160)  
     
     plt.scatter(x, table[0], color='darkviolet', label='A', s=3)
@@ -105,6 +105,7 @@ def plot_table(table):
     plt.legend()
     plt.xlabel('Position on Promoter')
     plt.ylabel('Nucleotide Frequency')
+    plt.savefig(f'../out/entropy_plots/{GENE}_frequncies_full.png')
     plt.show() 
     
     
@@ -125,7 +126,7 @@ def plot_table(table):
     ax2.scatter(x, table[3], color='springgreen', label='T', s=3)
     ax2.set_ylabel('Nucleotide Frequency')
     ax2.set_ylim(0.95, 1)
-    
+    plt.savefig(f'../out/entropy_plots/{GENE}_frequncies_capped.png')
     
     plt.tight_layout()
     plt.show()
