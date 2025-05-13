@@ -107,6 +107,7 @@ def main(args):
                 array_length=contigs.shape[1],
                 query_length=len(query),
                 batch_size=min(batch_size, contigs.shape[1]),
+                map_batch_size=1,  # TODO: allow for other values
             )
     else:
         def search_func(contigs, query):

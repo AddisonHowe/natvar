@@ -8,6 +8,7 @@ import equinox as eqx
 
 from ..core import count_mutations
 
+MAP_BATCH_SIZE = 1
 
 def search_matrix_for_query(
         matrix, query, 
@@ -128,7 +129,8 @@ def static_search_matrix(
 
 
 def static_search_matrix_batched(
-        matrix, query, array_length, query_length, batch_size,
+        matrix, query, array_length, query_length, batch_size, 
+        map_batch_size
 ):
     """Perform a k-query on a matrix of sequences, searching in batches.
 
@@ -170,7 +172,7 @@ def static_search_matrix_batched(
         )
     
     min_idxs, min_vals = jax.lax.map(
-        search_helper, jnp.arange(nbatches), batch_size=1
+        search_helper, jnp.arange(nbatches), batch_size=map_batch_size
     )    
     idxs = jnp.argmin(min_vals, axis=0)
     final_min_idxs = min_idxs[idxs,jnp.arange(len(idxs))]
@@ -180,6 +182,11 @@ def static_search_matrix_batched(
 
 def static_multisearch_matrix_batched(
         matrix, queries, array_length, query_length, batch_size,
+        map_batch_size=MAP_BATCH_SIZE
 ):
-    search_fn = jax.vmap(static_search_matrix_batched, (None,0,None,None,None))
-    return search_fn(matrix, queries, array_length, query_length, batch_size)
+    search_fn = jax.vmap(
+        static_search_matrix_batched, (None,0,None,None,None,None)
+    )
+    return search_fn(
+        matrix, queries, array_length, query_length, batch_size, map_batch_size
+    )

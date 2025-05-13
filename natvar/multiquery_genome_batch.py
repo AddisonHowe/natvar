@@ -57,6 +57,7 @@ def parse_args(args):
     parser.add_argument('-o', '--outdir', type=str, default="out")
     parser.add_argument('-f', '--outfname', type=str, default="results.tsv")
     parser.add_argument('-b', '--batch_size', type=int, default=1000)
+    parser.add_argument('-B', '--map_batch_size', type=int, default=1)
     parser.add_argument('-pl', '--pad_left', type=int, default=0)
     parser.add_argument('-pr', '--pad_right', type=int, default=0)
     parser.add_argument('--nrows0', type=int, default=0)
@@ -90,6 +91,7 @@ def main(args):
     outdir = args.outdir
     outfname = args.outfname
     batch_size = args.batch_size
+    map_batch_size = args.map_batch_size
     pad_left = args.pad_left
     pad_right = args.pad_right
     nrows0 = args.nrows0
@@ -186,6 +188,7 @@ def main(args):
             array_length=contig_length,
             query_length=query_length,
             batch_size=batch_size, 
+            map_batch_size=map_batch_size,
         )
         t1 = time.time()
         search_time = t1 - t0

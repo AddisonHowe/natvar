@@ -196,10 +196,11 @@ def test_static_search_matrix(
      [4, 8, 6],
     ],
 ])
-@pytest.mark.parametrize("batch_size", [2, 4, 8])
+@pytest.mark.parametrize("batch_size", [1, 2, 4, 8])
+@pytest.mark.parametrize("map_batch_size", [1, 2, 4, 8])
 def test_static_search_matrix_batched(
     matrix, query, min_locs_exp, min_dists_exp,
-    batch_size
+    batch_size, map_batch_size
 ):
     matrix = jnp.array(matrix, dtype=jnp.uint8)
     query = jnp.array(query, dtype=jnp.uint8)
@@ -212,6 +213,7 @@ def test_static_search_matrix_batched(
         array_length=matrix.shape[1],
         query_length=len(query),
         batch_size=batch_size,
+        map_batch_size=map_batch_size,
     )
     errors = []
     if not np.allclose(min_locs, min_locs_exp):
@@ -238,10 +240,11 @@ def test_static_search_matrix_batched(
      [[0, 0, 1], [0, 0, 1]],
     ],
 ])
-@pytest.mark.parametrize("batch_size", [2, 4, 8])
+@pytest.mark.parametrize("batch_size", [1, 2, 4, 8])
+@pytest.mark.parametrize("map_batch_size", [1, 2, 4, 8])
 def test_static_multisearch_matrix_batched(
     matrix, queries, min_locs_exp, min_dists_exp,
-    batch_size
+    batch_size, map_batch_size
 ):
     matrix = jnp.array(matrix, dtype=jnp.uint8)
     queries = jnp.array(queries, dtype=jnp.uint8)
@@ -253,6 +256,7 @@ def test_static_multisearch_matrix_batched(
         array_length=matrix.shape[1],
         query_length=queries.shape[1],
         batch_size=batch_size,
+        map_batch_size=map_batch_size,
     )
     errors = []
     if not np.allclose(min_locs, min_locs_exp):

@@ -145,19 +145,21 @@ from .conftest import DATDIR, TMPDIR, remove_dir
     ],
 ])
 @pytest.mark.parametrize("batch_size", [1, 2, 4, 32])
+@pytest.mark.parametrize("map_batch_size", [1, 2, 4])
 @pytest.mark.parametrize("nrows0", [0, 1, 4, 32])
 @pytest.mark.filterwarnings("ignore:.*Repadding.*:UserWarning")
 def test_multiquery_genome_batch(
         infile, queries_fpath, outdir, pad_left, pad_right, 
         exp_dists, exp_idxs, exp_locs, exp_seqs, exp_compiles_map, 
-        batch_size, nrows0
+        batch_size, map_batch_size, nrows0
 ):
     from natvar.multiquery_genome_batch import parse_args, main
     
     outfname = "q_batch_results.tsv"
     argstring = f"-q {DATDIR}/{queries_fpath} -i {DATDIR}/{infile} " \
                 + f"-o {outdir} -f {outfname} -pl {pad_left} -pr {pad_right} " \
-                + f"--batch_size {batch_size} -v 3 --nrows0 {nrows0}"
+                + f"--batch_size {batch_size} " \
+                + f"--map_batch_size {map_batch_size} -v 3 --nrows0 {nrows0}"
     
     errors = []
     try:
