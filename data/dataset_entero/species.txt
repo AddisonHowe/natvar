@@ -1,0 +1,158 @@
+ 181871 Salmonella enterica
+  88749 Escherichia coli
+  13621 Klebsiella pneumoniae
+   1302 Enterobacter hormaechei
+   1201 Enterobacter cloacae
+    709 Shigella flexneri
+    600 Klebsiella quasipneumoniae
+    527 Serratia marcescens
+    520 Shigella dysenteriae
+    455 Yersinia enterocolitica
+    440 Klebsiella variicola
+    348 Citrobacter freundii
+    347 Yersinia pseudotuberculosis
+    338 Yersinia pestis
+    307 Klebsiella oxytoca
+    291 Klebsiella aerogenes
+    253 Cronobacter sakazakii
+    234 Proteus mirabilis
+    216 Escherichia albertii
+    132 Citrobacter rodentium
+    109 Salmonella bongori
+    106 Morganella morganii
+     96 Escherichia marmotae
+     60 Klebsiella michiganensis
+     59 Escherichia fergusonii
+     59 Enterobacter sp. CRENT-193
+     58 Yersinia ruckeri
+     55 Hafnia alvei
+     49 Enterobacter bugandensis
+     49 Citrobacter koseri
+     44 Citrobacter braakii
+     42 Enterobacter cloacae complex sp.
+     41 Raoultella ornithinolytica
+     41 Citrobacter sp. FDAARGOS_156
+     36 Proteus vulgaris
+     35 Yersinia frederiksenii
+     35 Providencia rettgeri
+     32 Serratia liquefaciens
+     32 Pantoea agglomerans
+     27 Citrobacter werkmanii
+     24 Yersinia aleksiciae
+     22 Providencia stuartii
+     21 Yersinia intermedia
+     21 Raoultella planticola
+     20 Cronobacter malonaticus
+     19 Serratia sp. SSNIH1
+     17 Providencia alcalifaciens
+     17 Erwinia billingiae
+     17 Enterobacter asburiae
+     16 Providencia sp. WCHPr000369
+     16 Enterobacter sp. HK169
+     16 Cronobacter dublinensis
+     15 Yersinia massiliensis
+     15 Shigella sp. PAMC 28760
+     15 Pantoea ananatis
+     15 Kluyvera intermedia
+     14 Pectobacterium carotovorum
+     14 Klebsiella quasivariicola
+     13 Yersinia rohdei
+     12 Pantoea sp. PSNIH1
+     11 Pluralibacter gergoviae
+     11 Plesiomonas shigelloides
+     11 Cronobacter turicensis
+     11 Citrobacter sp. 92
+     11 Citrobacter sp. 86
+     11 Citrobacter farmeri
+     10 Rahnella aquatilis
+     10 Pantoea vagans
+      9 Xenorhabdus bovienii
+      9 Kosakonia cowanii
+      8 Yersinia similis
+      8 Serratia rubidaea
+      8 Serratia proteamaculans
+      8 Serratia fonticola
+      8 Photorhabdus laumondii
+      8 Citrobacter freundii complex sp. CFNIH4
+      8 Citrobacter amalonaticus
+      7 Serratia plymuthica
+      7 Enterobacter cancerogenus
+      6 Yersinia kristensenii
+      6 Sodalis glossinidius
+      6 Serratia sp. ATCC 39006
+      6 Leclercia sp. LSNIH3
+      6 Kosakonia oryzae
+      6 Enterobacter sp. ODB01
+      6 Enterobacter sp. Crenshaw
+      6 Buchnera aphidicola
+      5 Yersinia aldovae
+      5 Photorhabdus thracensis
+      5 Leclercia sp. LSNIH1
+      5 Kosakonia radicincitans
+      5 Enterobacteriaceae bacterium strain FGI 57
+      4 Yersinia sp. FDAARGOS_228
+      4 Serratia sp. YD25
+      4 Pantoea sp. PSNIH2
+      4 Enterobacter sp. FY-07
+      4 Enterobacter cloacae complex sp. ECNIH7
+      4 Dickeya dianthicola
+      4 Cronobacter muytjensii
+      4 Citrobacter freundii complex sp. CFNIH3
+      4 Cedecea neteri
+      3 Xenorhabdus nematophila
+      3 Pragia fontium
+      3 Phytobacter sp. SCO41
+      3 Photorhabdus asymbiotica
+      3 Enterobacter sp. SA187
+      3 Enterobacter sp. E20
+      3 [Enterobacter] lignolyticus
+      3 Enterobacteriaceae bacterium w17
+      3 Edwardsiella tarda
+      3 Citrobacter sp. CFNIH10
+      3 Candidatus Tachikawaea gelatinosa
+      2 Yersinia entomophaga
+      2 Xenorhabdus hominickii
+      2 Xenorhabdus doucetiae
+      2 Rahnella sp. Y9602
+      2 Providencia sneebia
+      2 Plautia stali symbiont
+      2 Pectobacterium atrosepticum
+      2 Pantoea stewartii
+      2 Pantoea rwandensis
+      2 Lelliottia sp. WB101
+      2 Lelliottia amnigena
+      2 Kosakonia sacchari
+      2 Klebsiella sp. LTGPAF-6F
+      2 Erwinia tasmaniensis
+      2 Enterobacter sp. 638
+      2 Enterobacteriaceae bacterium ENNIH1
+      2 Enterobacter cloacae complex sp. FDA-CDC-AR_0164
+      2 Enterobacter cloacae complex sp. 35734
+      2 Dickeya solani
+      2 Cronobacter universalis
+      2 Citrobacter sp. CRE-46
+      2 Candidatus Hamiltonella defensa
+      1 Wigglesworthia glossinidia
+      1 Tatumella ptyseos
+      1 Serratia sp. MYb239
+      1 Serratia sp. JKS000199
+      1 Serratia sp. FGI94
+      1 Serratia ficaria
+      1 Providencia heimbachae
+      1 Pectobacterium polaris
+      1 Pectobacterium parmentieri
+      1 Pantoea calida
+      1 Obesumbacterium proteus
+      1 Leminorella richardii
+      1 Leclercia adecarboxylata
+      1 Hafnia sp. CBA7124
+      1 Enterobacter sp. R4-368
+      1 Enterobacter ludwigii
+      1 Enterobacter kobei
+      1 Enterobacteriaceae bacterium ENNIH3
+      1 Enterobacteriaceae bacterium ENNIH2
+      1 Enterobacter cloacae complex sp. FDA-CDC-AR_0132
+      1 Dickeya zeae
+      1 Citrobacter freundii complex sp. CFNIH9
+      1 Citrobacter freundii complex sp. CFNIH2
+      1 Brenneria sp. EniD312

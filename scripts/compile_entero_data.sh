@@ -20,6 +20,14 @@ mdata_fpath=${outdir}/metadata_subset.tsv
 head data/metadata_all.tsv -n 1 > ${mdata_fpath}
 awk -F'\t' '$7 == "Enterobacterales"' data/metadata_all.tsv >> ${mdata_fpath}
 
+# --- Count number of individuals of each species ---
+species_fpath=${outdir}/species.txt
+cat ${mdata_fpath} | awk -F'\t' 'NR > 1 {print $2}' | sort | uniq -c | sort -nr > $species_fpath
+
+# --- Map assembly ids to species ---
+species_map_fpath=${outdir}/assembly_to_species.tsv
+cat ${mdata_fpath} | awk -F'\t' 'NR > 1 {printf "%s\t%s\n", $1, $2}' > $species_map_fpath
+
 # --- Contruct list of assembly ids ---
 assemblyids_fpath=${outdir}/assemblyids.tsv
 awk -F'\t' 'NR > 1 { print $1 }' ${mdata_fpath} > ${assemblyids_fpath}
